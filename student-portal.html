@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Portal — Pariya Academy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/report.css">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',sans-serif;background:#f4f7f4}
+
+/* Welcome Banner */
+.welcome-banner{
+  background:linear-gradient(135deg,#1a6b22 0%,#0d3d12 100%);
+  color:#fff;padding:32px;border-radius:14px;margin-bottom:24px;
+  display:flex;align-items:center;gap:20px;
+}
+.welcome-avatar{
+  width:72px;height:72px;border-radius:50%;
+  background:rgba(255,255,255,0.15);border:3px solid rgba(255,255,255,0.3);
+  display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;
+}
+.welcome-text h2{font-size:22px;font-weight:900;margin-bottom:4px}
+.welcome-text p{font-size:14px;opacity:0.85;margin:0}
+.welcome-meta{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap}
+.w-chip{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);
+  padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700}
+
+/* Term Tabs */
+.term-tabs{display:flex;gap:6px;margin-bottom:24px}
+.term-tab{flex:1;padding:12px;border:2px solid #dde8dd;border-radius:10px;
+  background:#fff;font-weight:800;font-size:14px;cursor:pointer;text-align:center;
+  transition:all 0.2s;color:#6b7a73}
+.term-tab.active{background:#1a6b22;color:#fff;border-color:#1a6b22}
+.term-tab.has-data{border-color:#228B2A;color:#228B2A}
+.term-tab.active.has-data{background:#1a6b22;color:#fff}
+
+/* Unavailable */
+.unavailable-card{
+  background:#fff;border-radius:12px;padding:48px;text-align:center;
+  border:2px dashed #dde8dd;
+}
+.unavailable-card .icon{font-size:48px;margin-bottom:12px}
+.unavailable-card h3{font-size:18px;font-weight:800;color:#444;margin-bottom:8px}
+.unavailable-card p{font-size:14px;color:#6b7a73}
+
+/* Download bar */
+.download-bar{
+  background:#fff;border-radius:10px;padding:14px 20px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);
+}
+.download-bar h4{font-size:15px;font-weight:800;color:#1a6b22;margin:0}
+.download-bar-btns{display:flex;gap:8px}
+</style>
+</head>
+<body class="portal-body">
+
+<nav class="portal-nav">
+  <div class="logo">🎓 Student Portal — Pariya Academy</div>
+  <div class="nav-links">
+    <a href="../index.html">🏫 School Website</a>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+</nav>
+
+<div class="portal-content">
+
+  <!-- Welcome Banner -->
+  <div class="welcome-banner" id="welcomeBanner">
+    <div class="welcome-avatar">🎓</div>
+    <div class="welcome-text">
+      <h2 id="welcomeName">Welcome, Student</h2>
+      <p id="welcomeSub">Loading your academic records...</p>
+      <div class="welcome-meta">
+        <span class="w-chip" id="chipAdm">ADM: —</span>
+        <span class="w-chip" id="chipClass">Class: —</span>
+        <span class="w-chip" id="chipSession">Session: —</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Term Selector -->
+  <div class="term-tabs">
+    <div class="term-tab" id="tab1" onclick="showTerm(1)">📋 First Term</div>
+    <div class="term-tab" id="tab2" onclick="showTerm(2)">📋 Second Term</div>
+    <div class="term-tab" id="tab3" onclick="showTerm(3)">📋 Third Term</div>
+  </div>
+
+  <!-- Report Output -->
+  <div id="reportDisplay"></div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="../js/core.js"></script>
+<script>
+// ── Auth Guard ──
+const sess = AUTH.requireRole('student', 'student-login.html');
+if (!sess) throw new Error('Not authenticated');
+
+const { admNo, clsId, className } = sess.data;
+const cfg = getConfig();
+
+// ── Student Data Cache ──
+const termData = { 1: null, 2: null, 3: null };
+let currentTerm = 1;
+
+// ── Populate Welcome Banner ──
+function populateWelcome(studentRecord) {
+  const name = studentRecord ? studentRecord['Name'] : admNo;
+  document.getElementById('welcomeName').textContent = `Welcome, ${name}`;
+  document.getElementById('welcomeSub').textContent = 'Here are your academic report cards for the current session.';
+  document.getElementById('chipAdm').textContent = `ADM: ${admNo}`;
+  document.getElementById('chipClass').textContent = `Class: ${className}`;
+  document.getElementById('chipSession').textContent = `Session: ${cfg.session || '2025/2026'}`;
+}
+
+// ── Load Student Data ──
+async function loadStudentTerm(termNum) {
+  if (termData[termNum] !== null) return termData[termNum]; // cached
+
+  // Try local cache first
+  const raw = LS.get(`csv_cache_${clsId}_t${termNum}`);
+  if (raw) {
+    const found = raw.find(r => (r['Admission No'] || '').toUpperCase() === admNo.toUpperCase());
+    if (found) {
+      termData[termNum] = found;
+      return found;
+    }
+  }
+
+  // Try fetching from Google Sheets if link available
+  const cls = getClass(clsId);
+  if (!cls) return null;
+  const link = termNum === 1 ? cls.term1 : termNum === 2 ? cls.term2 : cls.term3;
+  if (!link) return null;
+
+  try {
+    const csv = await fetchCSV(link);
+    const records = parseCSV(csv);
+    LS.set(`csv_cache_${clsId}_t${termNum}`, records);
+    const found = records.find(r => (r['Admission No'] || '').toUpperCase() === admNo.toUpperCase());
+    termData[termNum] = found || null;
+    return termData[termNum];
+  } catch (e) {
+    console.error('Fetch error term', termNum, e);
+    return null;
+  }
+}
+
+// ── Show Term Report ──
+async function showTerm(termNum) {
+  currentTerm = termNum;
+
+  // Update tabs
+  for (let i = 1; i <= 3; i++) {
+    const t = document.getElementById('tab' + i);
+    t.classList.remove('active');
+  }
+  document.getElementById('tab' + termNum).classList.add('active');
+
+  const display = document.getElementById('reportDisplay');
+  display.innerHTML = `
+    <div class="card-white" style="text-align:center;padding:40px">
+      <div style="font-size:36px;margin-bottom:12px">⏳</div>
+      <p style="color:#6b7a73;font-weight:600">Loading your report card...</p>
+    </div>`;
+
+  const record = await loadStudentTerm(termNum);
+
+  if (!record) {
+    display.innerHTML = `
+      <div class="unavailable-card">
+        <div class="icon">📭</div>
+        <h3>Result Not Available Yet</h3>
+        <p>Your ${['', 'First', 'Second', 'Third'][termNum]} Term result has not been published yet.<br>Please check back later or contact your class teacher.</p>
+      </div>`;
+    return;
+  }
+
+  // Populate welcome with actual name
+  populateWelcome(record);
+
+  // Determine term mode for annual summary
+  const cls = getClass(clsId);
+  let annualMap = null;
+  let termMode = 'normal';
+
+  if (termNum === 3 && cls && cls.term1 && cls.term2) {
+    const t1raw = LS.get(`csv_cache_${clsId}_t1`);
+    const t2raw = LS.get(`csv_cache_${clsId}_t2`);
+    const t3raw = LS.get(`csv_cache_${clsId}_t3`);
+    if (t1raw && t2raw && t3raw) {
+      const { processed: t1p } = processStudents(t1raw, 'First Term', cfg.session, cfg.resumption);
+      const { processed: t2p } = processStudents(t2raw, 'Second Term', cfg.session, cfg.resumption);
+      const { processed: t3p } = processStudents(t3raw, 'Third Term', cfg.session, cfg.resumption);
+      const summaries = computeAnnualSummary(t1p, t2p, t3p);
+      annualMap = {};
+      summaries.forEach(s => { annualMap[s.adm] = s; });
+      termMode = 'third-full';
+    }
+  }
+
+  // Process the student's class data to get position
+  const allRaw = LS.get(`csv_cache_${clsId}_t${termNum}`) || [record];
+  const termLabel = ['', 'First Term', 'Second Term', 'Third Term'][termNum];
+  const { processed, groups } = processStudents(allRaw, termLabel, cfg.session, cfg.resumption);
+
+  // Find this student in processed
+  const myStu = processed.find(p => (p['Admission No'] || '').toUpperCase() === admNo.toUpperCase());
+  if (!myStu) {
+    display.innerHTML = `<div class="unavailable-card"><div class="icon">⚠️</div><h3>Data Error</h3><p>Could not process your record. Please contact the admin.</p></div>`;
+    return;
+  }
+
+  // Total in class
+  const key = `${myStu.classType}||${myStu.classSection}`;
+  const classGroup = groups[key] || [];
+  const totalInClass = classGroup.length;
+
+  // Render
+  display.innerHTML = `
+    <div class="download-bar">
+      <h4>📋 ${termLabel} Report Card — ${escapeHtml(myStu['Name'])}</h4>
+      <div class="download-bar-btns">
+        <button class="btn-primary" onclick="downloadMyCard()" style="font-size:13px;padding:8px 16px">📥 Download My Report Card</button>
+      </div>
+    </div>
+    <div id="myCardWrap">${renderReportCard(myStu, totalInClass, cfg, annualMap, termMode)}</div>`;
+
+  // Generate QR
+  setTimeout(() => generateQRCodes([myStu], cfg), 300);
+
+  // Update tab data indicators
+  for (let i = 1; i <= 3; i++) {
+    const d = await loadStudentTerm(i);
+    const tab = document.getElementById('tab' + i);
+    if (d) tab.classList.add('has-data');
+  }
+}
+
+// ── Download My Card ──
+function downloadMyCard() {
+  const card = document.querySelector('#myCardWrap .card');
+  if (!card) { alert('No report card found.'); return; }
+  const btn = document.querySelector('#myCardWrap .card button');
+  if (btn) btn.style.visibility = 'hidden';
+  const filename = `${admNo}_${currentTerm}T_Report.pdf`;
+  const opt = {
+    margin: 12, filename,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, logging: false },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+  html2pdf().set(opt).from(card).save().then(() => {
+    if (btn) btn.style.visibility = 'visible';
+  });
+}
+window.downloadMyCard = downloadMyCard;
+
+function doLogout() { AUTH.logout(); window.location.href = 'student-login.html'; }
+
+// ── Init ──
+populateWelcome(null);
+showTerm(1);
+</script>
+</body>
+</html>

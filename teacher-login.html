@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Login — Pariya Academy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/report.css">
+<style>body{margin:0;font-family:'Plus Jakarta Sans',sans-serif;}</style>
+</head>
+<body>
+<div class="login-page">
+  <div class="login-box">
+    <div class="login-logo">
+      <div style="font-size:56px">📚</div>
+      <h1>Pariya Academy</h1>
+      <p>Teacher / Staff Portal</p>
+    </div>
+    <div class="login-title">Teacher Login</div>
+    <div id="errorMsg" class="alert alert-danger" style="display:none"></div>
+    <div class="form-group">
+      <label>Your Section</label>
+      <select id="section">
+        <option value="">-- Select your section --</option>
+        <option value="nursery">🌸 Nursery Section</option>
+        <option value="primary">📗 Primary Section</option>
+        <option value="jss">🔬 Junior Secondary (JSS)</option>
+        <option value="ss">🎓 Senior Secondary (SS)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Section Password</label>
+      <input type="password" id="password" placeholder="Enter section password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:8px" onclick="doLogin()" id="loginBtn">Login to Teacher Portal</button>
+    <div class="alert alert-info" style="margin-top:16px;font-size:12px">
+      💡 Each school section has its own unique password. Contact the admin if you need your section password.
+    </div>
+    <div style="text-align:center;margin-top:16px">
+      <a href="../index.html" style="color:var(--green);font-size:13px;font-weight:600;text-decoration:none">← Back to School Website</a>
+    </div>
+  </div>
+</div>
+<script src="../js/core.js"></script>
+<script>
+const sess = AUTH.getSession();
+if (sess && sess.role === 'teacher') window.location.href = 'teacher-portal.html';
+
+function doLogin() {
+  const section = document.getElementById('section').value;
+  const pw = document.getElementById('password').value.trim();
+  const errEl = document.getElementById('errorMsg');
+  const btn = document.getElementById('loginBtn');
+  errEl.style.display = 'none';
+
+  if (!section) { errEl.textContent = 'Please select your section.'; errEl.style.display = 'block'; return; }
+  if (!pw) { errEl.textContent = 'Please enter the section password.'; errEl.style.display = 'block'; return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Verifying...';
+
+  setTimeout(() => {
+    if (AUTH.loginSection(section, pw)) {
+      AUTH.setSession('teacher', { section, loginTime: Date.now() });
+      window.location.href = 'teacher-portal.html';
+    } else {
+      errEl.textContent = 'Incorrect section password. Please contact the administrator.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Login to Teacher Portal';
+    }
+  }, 600);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — Pariya Academy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/report.css">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',sans-serif;background:#f4f7f4}
+.tab-bar{display:flex;gap:4px;background:#fff;padding:4px;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);margin-bottom:24px;overflow-x:auto}
+.tab-btn{padding:8px 18px;border:none;background:transparent;border-radius:7px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;color:#6b7a73;transition:all 0.2s}
+.tab-btn.active{background:#1a6b22;color:#fff}
+.tab-content{display:none}.tab-content.active{display:block}
+.class-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-top:16px}
+.class-card{background:#fff;border-radius:12px;padding:20px;border:1px solid rgba(0,0,0,0.07);transition:box-shadow 0.2s}
+.class-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.1)}
+.class-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.class-card-header h4{font-size:16px;font-weight:800;color:#1a1a1a}
+.cat-badge{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:800;text-transform:uppercase}
+.cat-nursery{background:#ffe0e0;color:#a52a2a}
+.cat-primary{background:#e8f5e9;color:#228B2A}
+.cat-jss{background:#f3e5f5;color:#6A0DAD}
+.cat-ss{background:#e3f2fd;color:#000080}
+.csv-link-row{margin-bottom:8px}
+.csv-link-row label{font-size:11px;font-weight:800;color:#6b7a73;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px}
+.csv-link-row .link-input-wrap{display:flex;gap:6px}
+.csv-link-row input{flex:1;padding:6px 10px;border:1.5px solid #dde8dd;border-radius:6px;font-size:12px;font-family:inherit;outline:none}
+.csv-link-row input:focus{border-color:#228B2A}
+.csv-link-row .link-status{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;align-self:center}
+.link-ok{background:#e8f5e9;color:#228B2A}
+.link-empty{background:#f5f5f5;color:#ccc}
+.card-actions{display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid #f0f0f0}
+.btn-gen{background:#228B2A;color:#fff;border:none;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;flex:1;transition:background 0.2s}
+.btn-gen:hover{background:#1a6b22}
+.btn-gen.ghost{background:#fff;color:#228B2A;border:1px solid #228B2A}
+/* Config form */
+.config-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:700px){.config-grid{grid-template-columns:1fr}}
+.img-preview{width:80px;height:80px;border-radius:8px;object-fit:contain;border:1px dashed #ccc;background:#f9f9f9;display:flex;align-items:center;justify-content:center;margin-top:8px;font-size:11px;color:#aaa;text-align:center;overflow:hidden}
+.img-preview img{width:100%;height:100%;object-fit:contain}
+/* Generation overlay */
+#genOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center}
+#genOverlay.show{display:flex}
+.gen-modal{background:#fff;border-radius:16px;padding:40px;text-align:center;max-width:400px;width:90%}
+.gen-modal h3{font-size:20px;font-weight:800;margin-bottom:8px}
+.gen-modal p{color:#6b7a73;font-size:14px;margin-bottom:20px}
+.progress-bar{background:#f0f0f0;border-radius:20px;height:8px;overflow:hidden;margin-bottom:8px}
+.progress-fill{height:100%;background:#228B2A;border-radius:20px;transition:width 0.3s}
+</style>
+</head>
+<body class="portal-body">
+
+<nav class="portal-nav">
+  <div class="logo">⚙️ Admin Dashboard — Pariya Academy</div>
+  <div class="nav-links">
+    <a href="../index.html">🏫 Website</a>
+    <a href="admin-monitor.html" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);padding:5px 12px;border-radius:6px;font-size:12px;font-weight:700">📡 Score Monitor</a>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+</nav>
+
+<div class="portal-content">
+
+  <!-- Stat Cards -->
+  <div class="stat-cards" id="statCards">
+    <div class="stat-card"><div class="stat-val" id="statStudents">—</div><div class="stat-label">Total Students</div></div>
+    <div class="stat-card" style="border-color:#c9a227"><div class="stat-val" style="color:#c9a227" id="statClasses">—</div><div class="stat-label">Total Classes</div></div>
+    <div class="stat-card" style="border-color:#6A0DAD"><div class="stat-val" style="color:#6A0DAD" id="statLinked">—</div><div class="stat-label">Classes with CSV Links</div></div>
+    <div class="stat-card" style="border-color:#000080"><div class="stat-val" style="color:#000080" id="statSession">2025/2026</div><div class="stat-label">Active Session</div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="showTab('classes')">📋 Manage Classes & CSV Links</button>
+    <button class="tab-btn" onclick="showTab('generate')">📊 Generate Reports</button>
+    <button class="tab-btn" onclick="showTab('config')">⚙️ School Settings</button>
+    <button class="tab-btn" onclick="showTab('passwords')">🔑 Password Manager</button>
+  </div>
+
+  <!-- Tab: Classes -->
+  <div class="tab-content active" id="tab-classes">
+    <div class="card-white">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:8px">
+        <div class="section-title" style="margin:0">Classes & Google Sheets CSV Links</div>
+        <button class="btn-primary" onclick="showAddClass()">+ Add Class</button>
+      </div>
+      <p style="font-size:13px;color:#6b7a73;margin-bottom:0">Paste the Google Sheets <strong>share URL</strong> for each term. The system will auto-fetch and parse data.</p>
+    </div>
+    <div class="class-grid" id="classGrid"></div>
+  </div>
+
+  <!-- Tab: Generate -->
+  <div class="tab-content" id="tab-generate">
+    <div class="card-white">
+      <div class="section-title">Generate Report Cards</div>
+      <p style="font-size:13px;color:#6b7a73;margin-bottom:20px">Select a class and term, then click Generate. The system will fetch data from Google Sheets automatically.</p>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Select Class</label>
+          <select id="genClass"><option value="">-- Select Class --</option></select>
+        </div>
+        <div class="form-group">
+          <label>Select Term</label>
+          <select id="genTerm">
+            <option value="1">First Term</option>
+            <option value="2">Second Term</option>
+            <option value="3" selected>Third Term</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn-primary" onclick="startGenerate()">📊 Generate Reports</button>
+        <button class="btn-secondary" onclick="startGenerateAll()">📋 Generate All Classes (Selected Term)</button>
+      </div>
+    </div>
+    <div id="reportOutput"></div>
+  </div>
+
+  <!-- Tab: Config -->
+  <div class="tab-content" id="tab-config">
+    <div class="card-white">
+      <div class="section-title">School Settings</div>
+      <div class="config-grid">
+        <div class="form-group"><label>School Name</label><input type="text" id="cfgSchoolName" placeholder="School full name"></div>
+        <div class="form-group"><label>School Motto</label><input type="text" id="cfgMotto" placeholder="School motto"></div>
+        <div class="form-group"><label>School Address</label><input type="text" id="cfgAddress" placeholder="Full address"></div>
+        <div class="form-group"><label>Academic Session</label><input type="text" id="cfgSession" placeholder="e.g. 2025/2026"></div>
+        <div class="form-group"><label>Resumption Date</label><input type="text" id="cfgResumption" placeholder="e.g. 2 Jan. 2026"></div>
+        <div class="form-group"><label>Primary/Nursery Website</label><input type="text" id="cfgPrimaryWeb" placeholder="https://..."></div>
+        <div class="form-group"><label>Secondary Website (JSS/SS)</label><input type="text" id="cfgSecondaryWeb" placeholder="https://..."></div>
+        <div class="form-group"><label>Principal Name</label><input type="text" id="cfgPrincipalName" placeholder="Principal's full name"></div>
+        <div class="form-group">
+          <label>School Logo URL</label>
+          <input type="text" id="cfgSchoolLogo" placeholder="https://i.postimg.cc/FKF9wccT/school.png" oninput="previewImg('cfgSchoolLogo','prevSchoolLogo')">
+          <div class="img-preview" id="prevSchoolLogo"><span>No image</span></div>
+        </div>
+        <div class="form-group">
+          <label>Jibwis Logo URL</label>
+          <input type="text" id="cfgJibwisLogo" placeholder="https://i.postimg.cc/KYcZCLLQ/jibwis.jpg" oninput="previewImg('cfgJibwisLogo','prevJibwisLogo')">
+          <div class="img-preview" id="prevJibwisLogo"><span>No image</span></div>
+        </div>
+        <div class="form-group">
+          <label>Principal Signature URL</label>
+          <input type="text" id="cfgPrincipalSig" placeholder="https://i.postimg.cc/mgHMhv5f/20251204-232335.jpg" oninput="previewImg('cfgPrincipalSig','prevPrincipalSig')">
+          <div class="img-preview" id="prevPrincipalSig"><span>No image</span></div>
+        </div>
+        <div class="form-group">
+          <label>Form Master Signature URL</label>
+          <input type="text" id="cfgFormMasterSig" placeholder="https://i.postimg.cc/RZHfqkDr/IMG-20251209-170119.png" oninput="previewImg('cfgFormMasterSig','prevFormMasterSig')">
+          <div class="img-preview" id="prevFormMasterSig"><span>No image</span></div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="saveSchoolConfig()">💾 Save Settings</button>
+      <div id="cfgAlert" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- Tab: Passwords -->
+  <div class="tab-content" id="tab-passwords">
+    <div class="card-white">
+      <div class="section-title">Password Reference</div>
+      <div class="alert alert-info">These passwords are hardcoded in core.js. To change them, update the AUTH object in <code>js/core.js</code>.</div>
+      <h4 style="margin:16px 0 10px;color:#1a6b22;font-size:15px">Admin Password</h4>
+      <table class="data-table"><thead><tr><th>Role</th><th>Password</th></tr></thead>
+      <tbody><tr><td>Administrator</td><td><code>Admin@Pariya2025</code></td></tr></tbody></table>
+      <h4 style="margin:20px 0 10px;color:#1a6b22;font-size:15px">Teacher Section Passwords</h4>
+      <table class="data-table" id="sectionPwTable"></table>
+      <h4 style="margin:20px 0 10px;color:#1a6b22;font-size:15px">Student Class Passwords (sample)</h4>
+      <table class="data-table" id="classPwTable"></table>
+    </div>
+  </div>
+</div>
+
+<!-- Generation Overlay -->
+<div id="genOverlay">
+  <div class="gen-modal">
+    <div style="font-size:48px;margin-bottom:12px">📊</div>
+    <h3 id="genTitle">Generating Reports...</h3>
+    <p id="genMsg">Fetching data from Google Sheets</p>
+    <div class="progress-bar"><div class="progress-fill" id="genProgress" style="width:0%"></div></div>
+    <div id="genStage" style="font-size:12px;color:#6b7a73">Initialising...</div>
+  </div>
+</div>
+
+<!-- Add Class Modal -->
+<div id="addClassModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:16px;padding:32px;width:90%;max-width:500px">
+    <h3 style="margin-bottom:20px;font-size:18px;font-weight:800">Add New Class</h3>
+    <div class="form-group"><label>Class Name</label><input type="text" id="newClassName" placeholder="e.g. Primary 4B"></div>
+    <div class="form-group"><label>Category</label>
+      <select id="newClassCat">
+        <option value="nursery">Nursery</option>
+        <option value="primary" selected>Primary</option>
+        <option value="jss">Junior Secondary (JSS)</option>
+        <option value="ss">Senior Secondary (SS)</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn-primary" onclick="doAddClass()" style="flex:1">Add Class</button>
+      <button class="btn-secondary" onclick="document.getElementById('addClassModal').style.display='none'" style="flex:1">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/core.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+// Auth guard
+AUTH.requireRole('admin','admin-login.html');
+seedDefaultClasses();
+
+function doLogout(){ AUTH.logout(); window.location.href='admin-login.html'; }
+
+// Tabs
+function showTab(name){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  event.target.classList.add('active');
+  if(name==='generate') populateGenClassSelect();
+  if(name==='passwords') renderPasswordTables();
+}
+
+// ── Render Stats ──
+function renderStats(){
+  const classes=getClasses();
+  const linked=classes.filter(c=>c.term1||c.term2||c.term3).length;
+  document.getElementById('statClasses').textContent=classes.length;
+  document.getElementById('statLinked').textContent=linked;
+  const cfg=getConfig();
+  document.getElementById('statSession').textContent=cfg.session||'2025/2026';
+  // Rough student count from cached data
+  let total=0;
+  classes.forEach(c=>{
+    const cached=LS.get('csv_cache_'+c.id+'_t3')||LS.get('csv_cache_'+c.id+'_t1');
+    if(cached) total+=cached.length;
+  });
+  document.getElementById('statStudents').textContent=total||'—';
+}
+renderStats();
+
+// ── Class Grid ──
+function renderClassGrid(){
+  const grid=document.getElementById('classGrid');
+  const classes=getClasses();
+  grid.innerHTML=classes.map(cls=>classCardHtml(cls)).join('');
+}
+
+function classCardHtml(cls){
+  const catBadge={nursery:'cat-nursery',primary:'cat-primary',jss:'cat-jss',ss:'cat-ss'}[cls.category]||'cat-primary';
+  const catLabel={nursery:'Nursery',primary:'Primary',jss:'JSS',ss:'SS'}[cls.category]||cls.category;
+  return `<div class="class-card" id="cc-${cls.id}">
+    <div class="class-card-header">
+      <h4>${escapeHtml(cls.name)}</h4>
+      <span class="cat-badge ${catBadge}">${catLabel}</span>
+    </div>
+    <div class="csv-link-row">
+      <label>📋 First Term CSV Link</label>
+      <div class="link-input-wrap">
+        <input type="text" placeholder="Paste Google Sheets link..." value="${escapeHtml(cls.term1||'')}" oninput="updateClassLink('${cls.id}','term1',this.value)" id="lnk-${cls.id}-t1">
+        <div class="link-status ${cls.term1?'link-ok':'link-empty'}" id="st-${cls.id}-t1">${cls.term1?'✓':'○'}</div>
+      </div>
+    </div>
+    <div class="csv-link-row">
+      <label>📋 Second Term CSV Link</label>
+      <div class="link-input-wrap">
+        <input type="text" placeholder="Paste Google Sheets link..." value="${escapeHtml(cls.term2||'')}" oninput="updateClassLink('${cls.id}','term2',this.value)" id="lnk-${cls.id}-t2">
+        <div class="link-status ${cls.term2?'link-ok':'link-empty'}" id="st-${cls.id}-t2">${cls.term2?'✓':'○'}</div>
+      </div>
+    </div>
+    <div class="csv-link-row">
+      <label>📋 Third Term CSV Link</label>
+      <div class="link-input-wrap">
+        <input type="text" placeholder="Paste Google Sheets link..." value="${escapeHtml(cls.term3||'')}" oninput="updateClassLink('${cls.id}','term3',this.value)" id="lnk-${cls.id}-t3">
+        <div class="link-status ${cls.term3?'link-ok':'link-empty'}" id="st-${cls.id}-t3">${cls.term3?'✓':'○'}</div>
+      </div>
+    </div>
+    <div class="card-actions">
+      <button class="btn-gen ghost" onclick="genClassReport('${cls.id}','3')">📊 Generate 3rd Term</button>
+      <button class="btn-gen" onclick="deleteClassConfirm('${cls.id}','${escapeHtml(cls.name)}')" style="background:#dc3545;flex:0 0 auto;padding:7px 10px">🗑</button>
+    </div>
+  </div>`;
+}
+
+function updateClassLink(id,termKey,val){
+  const cls=getClass(id);
+  if(!cls) return;
+  cls[termKey]=val.trim();
+  upsertClass(cls);
+  // Update status icon
+  const stEl=document.getElementById(`st-${id}-${termKey==='term1'?'t1':termKey==='term2'?'t2':'t3'}`);
+  if(stEl){ stEl.className='link-status '+(val.trim()?'link-ok':'link-empty'); stEl.textContent=val.trim()?'✓':'○'; }
+}
+
+function deleteClassConfirm(id,name){
+  if(confirm(`Delete class "${name}"? This cannot be undone.`)){ deleteClass(id); renderClassGrid(); renderStats(); }
+}
+
+// Add class
+function showAddClass(){ document.getElementById('addClassModal').style.display='flex'; }
+function doAddClass(){
+  const name=document.getElementById('newClassName').value.trim();
+  const cat=document.getElementById('newClassCat').value;
+  if(!name){alert('Please enter a class name.');return;}
+  const id=name.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+  upsertClass({id,name,category:cat,section:cat,term1:'',term2:'',term3:''});
+  document.getElementById('addClassModal').style.display='none';
+  document.getElementById('newClassName').value='';
+  renderClassGrid(); renderStats();
+}
+
+renderClassGrid();
+
+// ── Generate Reports ──
+function populateGenClassSelect(){
+  const sel=document.getElementById('genClass');
+  sel.innerHTML='<option value="">-- Select Class --</option>';
+  getClasses().forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; sel.appendChild(o); });
+}
+
+async function startGenerate(){
+  const clsId=document.getElementById('genClass').value;
+  const term=document.getElementById('genTerm').value;
+  if(!clsId){alert('Please select a class.');return;}
+  const cls=getClass(clsId);
+  if(!cls){alert('Class not found.');return;}
+  await generateForClass(cls, parseInt(term));
+}
+
+async function startGenerateAll(){
+  const term=parseInt(document.getElementById('genTerm').value);
+  const classes=getClasses();
+  const output=document.getElementById('reportOutput');
+  output.innerHTML='';
+  for(const cls of classes){
+    const termLink=term===1?cls.term1:term===2?cls.term2:cls.term3;
+    if(!termLink) continue;
+    await generateForClass(cls,term,true);
+  }
+}
+
+async function genClassReport(clsId,term){
+  const cls=getClass(clsId);
+  if(!cls) return;
+  showTab('generate');
+  document.getElementById('genClass').value=clsId;
+  document.getElementById('genTerm').value=term;
+  await generateForClass(cls,parseInt(term));
+}
+
+async function generateForClass(cls, termNum, appendMode=false){
+  const overlay=document.getElementById('genOverlay');
+  const prog=document.getElementById('genProgress');
+  const stage=document.getElementById('genStage');
+  const genTitle=document.getElementById('genTitle');
+  const genMsg=document.getElementById('genMsg');
+
+  overlay.classList.add('show');
+  genTitle.textContent=`Generating ${cls.name}...`;
+  genMsg.textContent='Fetching data from Google Sheets';
+
+  function setProgress(pct,msg){ prog.style.width=pct+'%'; stage.textContent=msg; }
+
+  try {
+    setProgress(10,'Connecting to Google Sheets...');
+    const cfg=getConfig();
+
+    // Fetch term data
+    const termLink = termNum===1?cls.term1 : termNum===2?cls.term2 : cls.term3;
+    if(!termLink){ overlay.classList.remove('show'); alert(`No CSV link set for ${cls.name} Term ${termNum}.`); return; }
+
+    setProgress(30,'Downloading CSV data...');
+    const csv=await fetchCSV(termLink);
+    const raw=parseCSV(csv);
+    if(!raw.length){ overlay.classList.remove('show'); alert('No student data found in the CSV.'); return; }
+
+    // Cache for student portal
+    LS.set(`csv_cache_${cls.id}_t${termNum}`, raw);
+
+    setProgress(55,'Processing student scores...');
+    const {processed,groups}=processStudents(raw, `${['','First','Second','Third'][termNum]} Term`, cfg.session, cfg.resumption);
+
+    // Check for annual summary (third term + all terms present)
+    let annualMap=null;
+    let termMode='normal';
+    if(termNum===3 && cls.term1 && cls.term2){
+      setProgress(65,'Loading annual data...');
+      let t1raw=LS.get(`csv_cache_${cls.id}_t1`);
+      let t2raw=LS.get(`csv_cache_${cls.id}_t2`);
+
+      if(!t1raw && cls.term1){ try{ const c=await fetchCSV(cls.term1); t1raw=parseCSV(c); LS.set(`csv_cache_${cls.id}_t1`,t1raw); }catch(e){} }
+      if(!t2raw && cls.term2){ try{ const c=await fetchCSV(cls.term2); t2raw=parseCSV(c); LS.set(`csv_cache_${cls.id}_t2`,t2raw); }catch(e){} }
+
+      if(t1raw && t2raw){
+        const {processed:t1p}=processStudents(t1raw,'First Term',cfg.session,cfg.resumption);
+        const {processed:t2p}=processStudents(t2raw,'Second Term',cfg.session,cfg.resumption);
+        const summaries=computeAnnualSummary(t1p,t2p,processed);
+        annualMap={};
+        summaries.forEach(s=>{ annualMap[s.adm]=s; });
+        termMode='third-full';
+      }
+    }
+
+    setProgress(80,'Rendering report cards...');
+    const output=document.getElementById('reportOutput');
+    if(!appendMode) output.innerHTML='';
+
+    // Section header
+    const secDiv=document.createElement('div');
+    secDiv.className='card-white';
+    secDiv.style.marginBottom='16px';
+    secDiv.innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div><h3 style="font-size:17px;font-weight:800;color:#1a6b22;margin:0">${escapeHtml(cls.name)} — ${['','First','Second','Third'][termNum]} Term (${processed.length} students)</h3>
+        ${termMode==='third-full'?'<div class="alert alert-success" style="margin-top:8px;margin-bottom:0;font-size:12px">✅ Annual Academic Summary included (all 3 terms available)</div>':''}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-primary" onclick="downloadAllVisible(this)" style="font-size:12px;padding:7px 14px">📥 Download All PDFs</button>
+          <button class="btn-secondary" onclick="window.print()" style="font-size:12px;padding:7px 14px">🖨️ Print All</button>
+        </div>
+      </div>`;
+    output.appendChild(secDiv);
+
+    const cardsDiv=document.createElement('div');
+    cardsDiv.className='report-area';
+    output.appendChild(cardsDiv);
+
+    // Render per-group
+    for(const key in groups){
+      const groupStudents=groups[key];
+      const totalInClass=groupStudents.length;
+      groupStudents.forEach(stu=>{
+        cardsDiv.innerHTML+=renderReportCard(stu,totalInClass,cfg,annualMap,termMode);
+      });
+    }
+
+    setProgress(95,'Generating QR codes...');
+    setTimeout(()=>{
+      generateQRCodes(processed,cfg);
+      overlay.classList.remove('show');
+      renderStats();
+      secDiv.scrollIntoView({behavior:'smooth'});
+    },500);
+
+  } catch(err){
+    overlay.classList.remove('show');
+    console.error(err);
+    alert('Error: '+err.message+'\n\nCheck the Google Sheets link is public (Anyone with link can view).');
+  }
+}
+
+async function downloadAllVisible(btn){
+  const cards=btn.closest('.card-white').nextElementSibling.querySelectorAll('.card');
+  if(!cards.length){alert('No cards found.');return;}
+  alert(`Preparing ${cards.length} report cards. Please wait...`);
+  const opt={margin:10,filename:'Pariya_Reports.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,logging:false},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy']}};
+  const tmp=document.createElement('div');
+  cards.forEach(c=>{ const cl=c.cloneNode(true); cl.querySelectorAll('button').forEach(b=>b.remove()); tmp.appendChild(cl); });
+  setTimeout(async()=>{ try{ await html2pdf().set(opt).from(tmp).save(); }catch(e){ alert('Error: '+e.message); } },1000);
+}
+
+// ── School Config ──
+function loadConfigForm(){
+  const cfg=getConfig();
+  document.getElementById('cfgSchoolName').value=cfg.schoolName||'';
+  document.getElementById('cfgMotto').value=cfg.motto||'';
+  document.getElementById('cfgAddress').value=cfg.address||'';
+  document.getElementById('cfgSession').value=cfg.session||'';
+  document.getElementById('cfgResumption').value=cfg.resumption||'';
+  document.getElementById('cfgPrimaryWeb').value=cfg.primaryWebsite||'';
+  document.getElementById('cfgSecondaryWeb').value=cfg.secondaryWebsite||'';
+  document.getElementById('cfgPrincipalName').value=cfg.principalName||'';
+  document.getElementById('cfgSchoolLogo').value=cfg.schoolLogo||'';
+  document.getElementById('cfgJibwisLogo').value=cfg.jibwisLogo||'';
+  document.getElementById('cfgPrincipalSig').value=cfg.principalSig||'';
+  document.getElementById('cfgFormMasterSig').value=cfg.formMasterSig||'';
+  ['SchoolLogo','JibwisLogo','PrincipalSig','FormMasterSig'].forEach(k=>previewImg('cfg'+k,'prev'+k));
+}
+loadConfigForm();
+
+function previewImg(inputId, previewId){
+  const url=document.getElementById(inputId).value.trim();
+  const el=document.getElementById(previewId);
+  if(url){ el.innerHTML=`<img src="${escapeHtml(url)}" onerror="this.parentElement.innerHTML='<span>Load error</span>'">`; }
+  else { el.innerHTML='<span>No image</span>'; }
+}
+
+function saveSchoolConfig(){
+  const cfg={
+    schoolName:document.getElementById('cfgSchoolName').value.trim(),
+    motto:document.getElementById('cfgMotto').value.trim(),
+    address:document.getElementById('cfgAddress').value.trim(),
+    session:document.getElementById('cfgSession').value.trim(),
+    resumption:document.getElementById('cfgResumption').value.trim(),
+    primaryWebsite:document.getElementById('cfgPrimaryWeb').value.trim(),
+    secondaryWebsite:document.getElementById('cfgSecondaryWeb').value.trim(),
+    principalName:document.getElementById('cfgPrincipalName').value.trim(),
+    schoolLogo:document.getElementById('cfgSchoolLogo').value.trim(),
+    jibwisLogo:document.getElementById('cfgJibwisLogo').value.trim(),
+    principalSig:document.getElementById('cfgPrincipalSig').value.trim(),
+    formMasterSig:document.getElementById('cfgFormMasterSig').value.trim()
+  };
+  saveConfig(cfg);
+  renderStats();
+  const alert=document.getElementById('cfgAlert');
+  alert.innerHTML='<div class="alert alert-success">✅ Settings saved successfully!</div>';
+  setTimeout(()=>alert.innerHTML='',3000);
+}
+
+// ── Password Tables ──
+function renderPasswordTables(){
+  // Section passwords
+  const spt=document.getElementById('sectionPwTable');
+  spt.innerHTML=`<thead><tr><th>Section</th><th>Password</th></tr></thead><tbody>`
+    +Object.entries(AUTH.SECTION_PASSWORDS).map(([k,v])=>`<tr><td style="text-transform:capitalize">${k}</td><td><code>${v}</code></td></tr>`).join('')
+    +`</tbody>`;
+  // Class passwords (show first 10)
+  const cpt=document.getElementById('classPwTable');
+  const entries=Object.entries(AUTH.CLASS_PASSWORDS).slice(0,15);
+  cpt.innerHTML=`<thead><tr><th>Class</th><th>Password</th></tr></thead><tbody>`
+    +entries.map(([k,v])=>`<tr><td style="text-transform:capitalize">${k}</td><td><code>${v}</code></td></tr>`).join('')
+    +`<tr><td colspan="2" style="font-style:italic;color:#6b7a73">... and more in core.js</td></tr></tbody>`;
+}
+</script>
+</body>
+</html>

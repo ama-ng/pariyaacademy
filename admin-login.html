@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login — Pariya Academy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/report.css">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',sans-serif;}
+</style>
+</head>
+<body>
+<div class="login-page">
+  <div class="login-box">
+    <div class="login-logo">
+      <div style="font-size:56px">⚙️</div>
+      <h1>Pariya Academy</h1>
+      <p>Administrator Portal</p>
+    </div>
+    <div class="login-title">Admin Login</div>
+    <div id="errorMsg" class="alert alert-danger" style="display:none"></div>
+    <div class="form-group">
+      <label>Administrator Password</label>
+      <input type="password" id="password" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:8px" onclick="doLogin()" id="loginBtn">Login to Admin Portal</button>
+    <div style="text-align:center;margin-top:20px">
+      <a href="../index.html" style="color:var(--green);font-size:13px;font-weight:600;text-decoration:none">← Back to School Website</a>
+    </div>
+  </div>
+</div>
+<script src="../js/core.js"></script>
+<script>
+// Check if already logged in
+const sess = AUTH.getSession();
+if(sess && sess.role === 'admin') window.location.href = 'admin-dashboard.html';
+
+function doLogin(){
+  const pw = document.getElementById('password').value.trim();
+  const errEl = document.getElementById('errorMsg');
+  const btn = document.getElementById('loginBtn');
+  if(!pw){ errEl.textContent='Please enter the admin password.'; errEl.style.display='block'; return; }
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Logging in...';
+  setTimeout(()=>{
+    if(AUTH.loginAdmin(pw)){
+      AUTH.setSession('admin',{loginTime:Date.now()});
+      window.location.href='admin-dashboard.html';
+    } else {
+      errEl.textContent='Incorrect admin password. Please try again.';
+      errEl.style.display='block';
+      btn.disabled=false;
+      btn.textContent='Login to Admin Portal';
+    }
+  },600);
+}
+</script>
+</body>
+</html>

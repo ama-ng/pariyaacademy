@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Portal — Pariya Academy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/report.css">
+<style>body{margin:0;font-family:'Plus Jakarta Sans',sans-serif;}</style>
+</head>
+<body>
+<div class="login-page">
+  <div class="login-box">
+    <div class="login-logo">
+      <div style="font-size:56px">🎓</div>
+      <h1>Pariya Academy</h1>
+      <p>Student Portal — View Your Report Cards</p>
+    </div>
+    <div class="login-title">Student Login</div>
+    <div id="errorMsg" class="alert alert-danger" style="display:none"></div>
+    <div class="form-group">
+      <label>Admission Number</label>
+      <input type="text" id="admNo" placeholder="e.g. PA/2025/001" oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="form-group">
+      <label>Your Class</label>
+      <select id="classSelect"><option value="">-- Select your class --</option></select>
+    </div>
+    <div class="form-group">
+      <label>Class Password</label>
+      <input type="password" id="password" placeholder="Enter class password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:8px" onclick="doLogin()" id="loginBtn">View My Report Cards</button>
+    <div class="alert alert-info" style="margin-top:16px;font-size:12px">
+      💡 Your class password is provided by your class teacher or form master.
+    </div>
+    <div style="text-align:center;margin-top:16px">
+      <a href="../index.html" style="color:var(--green);font-size:13px;font-weight:600;text-decoration:none">← Back to School Website</a>
+    </div>
+  </div>
+</div>
+<script src="../js/core.js"></script>
+<script>
+// Already logged in?
+const sess=AUTH.getSession();
+if(sess && sess.role==='student') window.location.href='student-portal.html';
+
+// Populate class dropdown
+const sel=document.getElementById('classSelect');
+getClasses().forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; sel.appendChild(o); });
+
+function doLogin(){
+  const admNo=document.getElementById('admNo').value.trim();
+  const clsId=document.getElementById('classSelect').value;
+  const pw=document.getElementById('password').value.trim();
+  const errEl=document.getElementById('errorMsg');
+  const btn=document.getElementById('loginBtn');
+  errEl.style.display='none';
+  if(!admNo){errEl.textContent='Please enter your admission number.';errEl.style.display='block';return;}
+  if(!clsId){errEl.textContent='Please select your class.';errEl.style.display='block';return;}
+  if(!pw){errEl.textContent='Please enter the class password.';errEl.style.display='block';return;}
+
+  const cls=getClass(clsId);
+  if(!cls){errEl.textContent='Class not found.';errEl.style.display='block';return;}
+  
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span> Verifying...';
+
+  setTimeout(()=>{
+    // Look up class password by class name (normalized)
+    const classKey=cls.name.toLowerCase();
+    const validPw=AUTH.CLASS_PASSWORDS[classKey];
+    
+    if(validPw && validPw===pw){
+      // Check student exists in cached data
+      const cached=findStudentData(admNo, clsId);
+      if(!cached){
+        // Allow login even if not cached — data may not be loaded yet
+        AUTH.setSession('student',{admNo, clsId, className:cls.name});
+        window.location.href='student-portal.html';
+        return;
+      }
+      AUTH.setSession('student',{admNo, clsId, className:cls.name, studentName:cached.name});
+      window.location.href='student-portal.html';
+    } else {
+      errEl.textContent='Incorrect class password. Please check with your teacher.';
+      errEl.style.display='block';
+      btn.disabled=false;
+      btn.textContent='View My Report Cards';
+    }
+  },600);
+}
+
+function findStudentData(admNo, clsId){
+  for(let t=1;t<=3;t++){
+    const raw=LS.get(`csv_cache_${clsId}_t${t}`);
+    if(raw){
+      const found=raw.find(r=>(r['Admission No']||'').toUpperCase()===admNo.toUpperCase());
+      if(found) return {name:found['Name']};
+    }
+  }
+  return null;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal Login — Pariya Academy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  min-height:100vh;
+  background:linear-gradient(160deg,#0d3d12 0%,#1a6b22 55%,#0a2e0d 100%);
+  display:flex;align-items:center;justify-content:center;padding:24px;
+}
+.hub{max-width:900px;width:100%}
+.hub-header{text-align:center;margin-bottom:48px;color:#fff}
+.hub-header .school-icon{font-size:56px;margin-bottom:16px}
+.hub-header h1{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,44px);font-weight:700;line-height:1.1;margin-bottom:8px}
+.hub-header p{font-size:15px;opacity:0.75;font-weight:400}
+
+.portal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media(max-width:700px){.portal-grid{grid-template-columns:1fr}}
+
+.portal-card{
+  background:#fff;border-radius:16px;padding:32px 24px;text-align:center;
+  text-decoration:none;color:inherit;
+  box-shadow:0 8px 32px rgba(0,0,0,0.25);
+  transition:transform 0.25s, box-shadow 0.25s;
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  border-top:4px solid transparent;
+}
+.portal-card:hover{transform:translateY(-6px);box-shadow:0 16px 48px rgba(0,0,0,0.35)}
+.portal-card.student{border-top-color:#228B2A}
+.portal-card.teacher{border-top-color:#c9a227}
+.portal-card.admin{border-top-color:#6A0DAD}
+
+.portal-icon{
+  width:72px;height:72px;border-radius:18px;
+  display:flex;align-items:center;justify-content:center;font-size:32px;
+}
+.icon-student{background:#e8f5e9}
+.icon-teacher{background:#fff8e1}
+.icon-admin{background:#f3e5f5}
+
+.portal-card h2{font-size:20px;font-weight:900;color:#1a1a1a}
+.portal-card p{font-size:13px;color:#6b7a73;line-height:1.6}
+.portal-card .features{display:flex;flex-direction:column;gap:6px;margin-top:4px;text-align:left;width:100%}
+.portal-card .feat{display:flex;align-items:center;gap:8px;font-size:12px;color:#444;font-weight:600}
+.portal-card .feat::before{content:'✓';color:#228B2A;font-weight:900;flex-shrink:0}
+
+.portal-card .login-btn{
+  margin-top:16px;width:100%;
+  padding:11px;border-radius:8px;border:none;
+  font-size:14px;font-weight:800;cursor:pointer;transition:opacity 0.2s;
+}
+.portal-card.student .login-btn{background:#228B2A;color:#fff}
+.portal-card.teacher .login-btn{background:#c9a227;color:#fff}
+.portal-card.admin   .login-btn{background:#6A0DAD;color:#fff}
+.portal-card .login-btn:hover{opacity:0.9}
+
+.hub-footer{text-align:center;margin-top:32px}
+.hub-footer a{color:rgba(255,255,255,0.7);font-size:13px;text-decoration:none;font-weight:600}
+.hub-footer a:hover{color:#fff}
+</style>
+</head>
+<body>
+<div class="hub">
+  <div class="hub-header">
+    <div class="school-icon">🏫</div>
+    <h1>Pariya Academy<br>Digital Portal</h1>
+    <p>Select your portal to continue</p>
+  </div>
+
+  <div class="portal-grid">
+
+    <!-- Student -->
+    <div class="portal-card student">
+      <div class="portal-icon icon-student">🎓</div>
+      <h2>Student Portal</h2>
+      <p>Access your personal report cards and academic results securely.</p>
+      <div class="features">
+        <div class="feat">View First, Second & Third Term results</div>
+        <div class="feat">Download individual report card PDF</div>
+        <div class="feat">Annual Academic Summary (3rd Term)</div>
+      </div>
+      <button class="login-btn" onclick="window.location.href='student-login.html'">Login as Student →</button>
+    </div>
+
+    <!-- Teacher -->
+    <div class="portal-card teacher">
+      <div class="portal-icon icon-teacher">📚</div>
+      <h2>Teacher Portal</h2>
+      <p>View and manage report cards for your school section.</p>
+      <div class="features">
+        <div class="feat">View all students in your section</div>
+        <div class="feat">Search & filter by class</div>
+        <div class="feat">Print & download section reports</div>
+      </div>
+      <button class="login-btn" onclick="window.location.href='teacher-login.html'">Login as Teacher →</button>
+    </div>
+
+    <!-- Admin -->
+    <div class="portal-card admin">
+      <div class="portal-icon icon-admin">⚙️</div>
+      <h2>Admin Portal</h2>
+      <p>Manage all classes, CSV links, school settings and generate reports.</p>
+      <div class="features">
+        <div class="feat">Connect Google Sheets CSV links</div>
+        <div class="feat">Generate reports for all classes</div>
+        <div class="feat">Manage school settings & images</div>
+      </div>
+      <button class="login-btn" onclick="window.location.href='admin-login.html'">Login as Admin →</button>
+    </div>
+  </div>
+
+  <!-- ── Monitor Tools Row ── -->
+  <div style="margin-top:28px">
+    <div style="text-align:center;color:rgba(255,255,255,0.5);font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px">Staff Monitoring Tools</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:700px;margin:0 auto">
+
+      <div class="portal-card" style="border-top-color:#10b981">
+        <div class="portal-icon" style="background:#dcfce7">📡</div>
+        <h2 style="font-size:17px">Admin Score Monitor</h2>
+        <p>Track subject score upload progress across all sections. Staff management & salary tracking.</p>
+        <div class="features">
+          <div class="feat">All sections: Nursery → SS</div>
+          <div class="feat">DONE / WAIT badge per subject</div>
+          <div class="feat">Staff salary tracking</div>
+        </div>
+        <button class="login-btn" style="background:#065f46" onclick="window.location.href='admin-monitor.html'">Open Admin Monitor →</button>
+      </div>
+
+      <div class="portal-card" style="border-top-color:#f59e0b">
+        <div class="portal-icon" style="background:#fff7ed">📊</div>
+        <h2 style="font-size:17px">Teacher Score Monitor</h2>
+        <p>Teachers check upload progress for their own section, search students, and track pending scores.</p>
+        <div class="features">
+          <div class="feat">Section-specific login</div>
+          <div class="feat">Student search & rankings</div>
+          <div class="feat">Copy pending report</div>
+        </div>
+        <button class="login-btn" style="background:#92400e;color:#fff" onclick="window.location.href='teacher-monitor.html'">Open Teacher Monitor →</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="hub-footer">
+    <a href="../index.html">← Return to School Website</a>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Portal — Pariya Academy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/report.css">
+<style>
+body { margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7f4; }
+
+.section-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 16px; border-radius: 20px; font-weight: 800; font-size: 13px; margin-bottom: 20px;
+}
+.badge-nursery  { background: #ffe0e0; color: #a52a2a; }
+.badge-primary  { background: #e8f5e9; color: #228B2A; }
+.badge-jss      { background: #f3e5f5; color: #6A0DAD; }
+.badge-ss       { background: #e3f2fd; color: #000080; }
+
+/* Search/Filter Bar */
+.filter-bar {
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;
+}
+.filter-bar input, .filter-bar select {
+  padding: 9px 14px; border: 1.5px solid #dde8dd; border-radius: 8px;
+  font-size: 13px; font-family: inherit; outline: none;
+}
+.filter-bar input { flex: 1; min-width: 200px; }
+.filter-bar input:focus, .filter-bar select:focus { border-color: #228B2A; }
+
+/* Student List */
+.student-list { display: flex; flex-direction: column; gap: 8px; }
+.student-row {
+  background: #fff; border-radius: 10px; padding: 14px 18px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border: 1px solid rgba(0,0,0,0.06); transition: box-shadow 0.2s; flex-wrap: wrap;
+}
+.student-row:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
+.student-info h4 { font-size: 15px; font-weight: 800; color: #1a1a1a; margin-bottom: 3px; }
+.student-info p { font-size: 12px; color: #6b7a73; font-weight: 600; }
+.student-stats { display: flex; gap: 16px; flex-wrap: wrap; }
+.s-stat { text-align: center; }
+.s-stat .sv { font-size: 17px; font-weight: 900; color: #228B2A; }
+.s-stat .sl { font-size: 10px; color: #6b7a73; font-weight: 700; text-transform: uppercase; }
+.student-actions { display: flex; gap: 6px; }
+
+/* Term selector for teacher */
+.term-sel-bar {
+  display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.term-sel-btn {
+  padding: 7px 16px; border: 2px solid #dde8dd; border-radius: 8px;
+  background: #fff; font-weight: 800; font-size: 13px; cursor: pointer; color: #6b7a73;
+  transition: all 0.2s;
+}
+.term-sel-btn.active { background: #1a6b22; color: #fff; border-color: #1a6b22; }
+
+/* Print view */
+#printArea { display: none; }
+@media print {
+  body > * { display: none !important; }
+  #printArea { display: block !important; }
+}
+</style>
+</head>
+<body class="portal-body">
+
+<nav class="portal-nav">
+  <div class="logo">📚 Teacher Portal — Pariya Academy</div>
+  <div class="nav-links">
+    <a href="../index.html">🏫 Website</a>
+    <a href="teacher-monitor.html" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);padding:5px 12px;border-radius:6px;font-size:12px;font-weight:700">📡 Score Monitor</a>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+</nav>
+
+<div class="portal-content">
+
+  <!-- Section Banner -->
+  <div id="sectionBanner"></div>
+
+  <!-- Stats -->
+  <div class="stat-cards" id="statCards">
+    <div class="stat-card"><div class="stat-val" id="stTotal">—</div><div class="stat-label">Students in Section</div></div>
+    <div class="stat-card" style="border-color:#c9a227"><div class="stat-val" style="color:#c9a227" id="stClasses">—</div><div class="stat-label">Classes</div></div>
+    <div class="stat-card" style="border-color:#6A0DAD"><div class="stat-val" style="color:#6A0DAD" id="stAvg">—</div><div class="stat-label">Section Avg Score</div></div>
+    <div class="stat-card" style="border-color:#000080"><div class="stat-val" style="color:#000080" id="stPass">—</div><div class="stat-label">Pass Rate</div></div>
+  </div>
+
+  <!-- Term Selector -->
+  <div class="card-white">
+    <div class="section-title" style="margin-bottom:12px">Select Term to View</div>
+    <div class="term-sel-bar" id="termSelBar">
+      <button class="term-sel-btn active" onclick="selectTerm(1,this)">📋 First Term</button>
+      <button class="term-sel-btn" onclick="selectTerm(2,this)">📋 Second Term</button>
+      <button class="term-sel-btn" onclick="selectTerm(3,this)">📋 Third Term</button>
+    </div>
+    <div class="filter-bar">
+      <input type="text" id="searchInput" placeholder="🔍 Search student by name or admission no..." oninput="filterStudents()">
+      <select id="classFilter" onchange="filterStudents()">
+        <option value="">All Classes</option>
+      </select>
+      <button class="btn-primary" onclick="generateSectionReports()" style="white-space:nowrap">📊 Generate Section Reports</button>
+      <button class="btn-secondary" onclick="printAll()" style="white-space:nowrap">🖨️ Print All</button>
+    </div>
+  </div>
+
+  <!-- Student List -->
+  <div class="card-white">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div class="section-title" style="margin:0" id="listTitle">Students</div>
+      <div id="listCount" style="font-size:13px;color:#6b7a73;font-weight:600"></div>
+    </div>
+    <div id="studentList">
+      <div class="empty-state">
+        <div class="empty-icon">⏳</div>
+        <h3>Loading students...</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Output -->
+  <div id="reportOutput"></div>
+</div>
+
+<!-- Print Area -->
+<div id="printArea"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="../js/core.js"></script>
+<script>
+// ── Auth ──
+const sess = AUTH.requireRole('teacher', 'teacher-login.html');
+if (!sess) throw new Error('Not authenticated');
+
+const { section } = sess.data;
+const cfg = getConfig();
+let currentTermNum = 1;
+let allStudents = [];
+let filteredStudents = [];
+
+const SECTION_LABELS = { nursery: '🌸 Nursery Section', primary: '📗 Primary Section', jss: '🔬 Junior Secondary (JSS)', ss: '🎓 Senior Secondary (SS)' };
+const SECTION_BADGE  = { nursery: 'badge-nursery', primary: 'badge-primary', jss: 'badge-jss', ss: 'badge-ss' };
+
+function doLogout() { AUTH.logout(); window.location.href = 'teacher-login.html'; }
+
+// ── Section Banner ──
+function renderBanner() {
+  document.getElementById('sectionBanner').innerHTML = `
+    <div class="section-badge ${SECTION_BADGE[section] || 'badge-primary'}">
+      ${SECTION_LABELS[section] || section}
+    </div>`;
+}
+renderBanner();
+
+// ── Get classes belonging to this section ──
+function getSectionClasses() {
+  return getClasses().filter(c => {
+    const cat = c.category || '';
+    if (section === 'nursery') return cat === 'nursery';
+    if (section === 'primary') return cat === 'primary';
+    if (section === 'jss') return cat === 'jss';
+    if (section === 'ss') return cat === 'ss';
+    return false;
+  });
+}
+
+// ── Load Data ──
+async function loadSectionData(termNum) {
+  const classes = getSectionClasses();
+  allStudents = [];
+
+  for (const cls of classes) {
+    const link = termNum === 1 ? cls.term1 : termNum === 2 ? cls.term2 : cls.term3;
+    let raw = LS.get(`csv_cache_${cls.id}_t${termNum}`);
+
+    if (!raw && link) {
+      try {
+        const csv = await fetchCSV(link);
+        raw = parseCSV(csv);
+        LS.set(`csv_cache_${cls.id}_t${termNum}`, raw);
+      } catch (e) {
+        console.warn('Could not load', cls.name, e.message);
+      }
+    }
+
+    if (raw && raw.length) {
+      const termLabel = ['', 'First Term', 'Second Term', 'Third Term'][termNum];
+      const { processed } = processStudents(raw, termLabel, cfg.session, cfg.resumption);
+      processed.forEach(s => { s._classId = cls.id; s._className = cls.name; });
+      allStudents.push(...processed);
+    }
+  }
+
+  updateStats();
+  populateClassFilter(classes);
+  filteredStudents = [...allStudents];
+  renderStudentList();
+}
+
+function updateStats() {
+  document.getElementById('stTotal').textContent = allStudents.length || '—';
+  const classIds = [...new Set(allStudents.map(s => s._classId))];
+  document.getElementById('stClasses').textContent = classIds.length || '—';
+  if (allStudents.length) {
+    const avg = (allStudents.reduce((s, r) => s + r.avg, 0) / allStudents.length).toFixed(1);
+    const pass = allStudents.filter(s => s.avg >= 40).length;
+    const rate = ((pass / allStudents.length) * 100).toFixed(0);
+    document.getElementById('stAvg').textContent = avg + '%';
+    document.getElementById('stPass').textContent = rate + '%';
+  }
+}
+
+function populateClassFilter(classes) {
+  const sel = document.getElementById('classFilter');
+  sel.innerHTML = '<option value="">All Classes</option>';
+  classes.forEach(c => {
+    const o = document.createElement('option'); o.value = c.id; o.textContent = c.name; sel.appendChild(o);
+  });
+}
+
+// ── Render Student List ──
+function renderStudentList() {
+  const list = document.getElementById('studentList');
+  document.getElementById('listCount').textContent = `${filteredStudents.length} student${filteredStudents.length !== 1 ? 's' : ''}`;
+
+  if (!filteredStudents.length) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <h3>No Students Found</h3>
+        <p>No student data available for this section and term.<br>Ensure Google Sheets CSV links are set in the Admin panel.</p>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = filteredStudents.map(stu => `
+    <div class="student-row">
+      <div class="student-info">
+        <h4>${escapeHtml(stu['Name'])}</h4>
+        <p>${escapeHtml(stu['Admission No'] || '—')} &nbsp;·&nbsp; ${escapeHtml(stu.classType)} ${escapeHtml(stu.classSection || '')} &nbsp;·&nbsp; ${escapeHtml(stu['Gender'] || '—')}</p>
+      </div>
+      <div class="student-stats">
+        <div class="s-stat"><div class="sv">${stu.totalMarks.toFixed(0)}</div><div class="sl">Total</div></div>
+        <div class="s-stat"><div class="sv">${stu.avg}</div><div class="sl">Avg%</div></div>
+        <div class="s-stat"><div class="sv">${stu.grade}</div><div class="sl">Grade</div></div>
+        <div class="s-stat"><div class="sv">${stu._pos}</div><div class="sl">Position</div></div>
+      </div>
+      <div class="student-actions">
+        <button class="btn-primary" onclick="viewSingleReport(${stu._idx})" style="font-size:12px;padding:7px 12px">👁 View Report</button>
+        <button class="btn-secondary" onclick="downloadSingleReport(${stu._idx})" style="font-size:12px;padding:7px 12px">📥</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Filter ──
+function filterStudents() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const cls = document.getElementById('classFilter').value;
+  filteredStudents = allStudents.filter(s => {
+    const matchQ = !q || (s['Name'] || '').toLowerCase().includes(q) || (s['Admission No'] || '').toLowerCase().includes(q);
+    const matchC = !cls || s._classId === cls;
+    return matchQ && matchC;
+  });
+  renderStudentList();
+}
+
+// ── Term selection ──
+function selectTerm(termNum, btn) {
+  currentTermNum = termNum;
+  document.querySelectorAll('.term-sel-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('reportOutput').innerHTML = '';
+  document.getElementById('studentList').innerHTML = `<div class="empty-state"><div class="empty-icon">⏳</div><h3>Loading...</h3></div>`;
+  loadSectionData(termNum);
+}
+
+// ── View Single Report ──
+function viewSingleReport(idx) {
+  const stu = allStudents.find(s => s._idx === idx);
+  if (!stu) return;
+
+  // Get class group for total count
+  const classGroup = allStudents.filter(s => s.classType === stu.classType && s.classSection === stu.classSection);
+  const totalInClass = classGroup.length;
+
+  const output = document.getElementById('reportOutput');
+  output.innerHTML = `
+    <div class="download-bar">
+      <h4>📋 Report Card — ${escapeHtml(stu['Name'])}</h4>
+      <div class="download-bar-btns">
+        <button class="btn-primary" id="dlBtn" onclick="triggerDownload(${idx})" style="font-size:13px;padding:8px 16px">📥 Download PDF</button>
+        <button class="btn-secondary" onclick="document.getElementById('reportOutput').innerHTML=''" style="font-size:13px;padding:8px 16px">✕ Close</button>
+      </div>
+    </div>
+    <div id="singleCardWrap">${renderReportCard(stu, totalInClass, cfg, null, 'normal')}</div>`;
+
+  setTimeout(() => generateQRCodes([stu], cfg), 300);
+  output.scrollIntoView({ behavior: 'smooth' });
+}
+
+function triggerDownload(idx) {
+  const btn = document.getElementById('dlBtn');
+  const card = document.querySelector('#singleCardWrap .card');
+  if (!card) return;
+  const stu = allStudents.find(s => s._idx === idx);
+  const fname = `${(stu['Admission No'] || 'RPT').replace(/\//g, '_')}_${currentTermNum}T.pdf`;
+  if (btn) btn.style.visibility = 'hidden';
+  html2pdf().set({
+    margin: 12, filename: fname,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, logging: false },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).from(card).save().then(() => { if (btn) btn.style.visibility = 'visible'; });
+}
+
+async function downloadSingleReport(idx) {
+  const stu = allStudents.find(s => s._idx === idx);
+  if (!stu) return;
+  const classGroup = allStudents.filter(s => s.classType === stu.classType && s.classSection === stu.classSection);
+  const wrap = document.createElement('div');
+  wrap.innerHTML = renderReportCard(stu, classGroup.length, cfg, null, 'normal');
+  document.body.appendChild(wrap);
+  await new Promise(r => setTimeout(r, 300));
+  generateQRCodes([stu], cfg);
+  await new Promise(r => setTimeout(r, 500));
+  const card = wrap.querySelector('.card');
+  const fname = `${(stu['Admission No'] || 'RPT').replace(/\//g, '_')}.pdf`;
+  await html2pdf().set({
+    margin: 12, filename: fname,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, logging: false },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).from(card).save();
+  document.body.removeChild(wrap);
+}
+
+// ── Generate All Section Reports ──
+async function generateSectionReports() {
+  if (!allStudents.length) { alert('No student data loaded for this section and term.'); return; }
+  const output = document.getElementById('reportOutput');
+
+  const termLabel = ['', 'First Term', 'Second Term', 'Third Term'][currentTermNum];
+  output.innerHTML = `
+    <div class="download-bar">
+      <h4>📋 ${SECTION_LABELS[section]} — ${termLabel} Reports (${allStudents.length} students)</h4>
+      <div class="download-bar-btns">
+        <button class="btn-primary" onclick="downloadAllSectionCards()" style="font-size:13px;padding:8px 16px">📥 Download All PDFs</button>
+        <button class="btn-secondary" onclick="printAll()" style="font-size:13px;padding:8px 16px">🖨️ Print All</button>
+        <button class="btn-secondary" onclick="document.getElementById('reportOutput').innerHTML=''" style="font-size:13px;padding:8px 16px">✕ Close</button>
+      </div>
+    </div>
+    <div class="report-area" id="sectionCardsArea"></div>`;
+
+  const area = document.getElementById('sectionCardsArea');
+  allStudents.forEach(stu => {
+    const classGroup = allStudents.filter(s => s.classType === stu.classType && s.classSection === stu.classSection);
+    area.innerHTML += renderReportCard(stu, classGroup.length, cfg, null, 'normal');
+  });
+
+  setTimeout(() => { generateQRCodes(allStudents, cfg); output.scrollIntoView({ behavior: 'smooth' }); }, 500);
+}
+
+async function downloadAllSectionCards() {
+  const cards = document.querySelectorAll('#sectionCardsArea .card');
+  if (!cards.length) { alert('Generate reports first.'); return; }
+  alert(`Preparing ${cards.length} PDFs. Please wait...`);
+  const tmp = document.createElement('div');
+  cards.forEach(c => { const cl = c.cloneNode(true); cl.querySelectorAll('button').forEach(b => b.remove()); tmp.appendChild(cl); });
+  setTimeout(async () => {
+    await html2pdf().set({
+      margin: 10,
+      filename: `Pariya_${section}_Term${currentTermNum}_Reports.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] }
+    }).from(tmp).save();
+  }, 1000);
+}
+
+function printAll() {
+  const cards = document.querySelectorAll('#sectionCardsArea .card, #singleCardWrap .card');
+  if (!cards.length) { alert('Generate or view reports first.'); return; }
+  const printArea = document.getElementById('printArea');
+  printArea.innerHTML = '';
+  cards.forEach(c => { const cl = c.cloneNode(true); cl.querySelectorAll('button').forEach(b => b.remove()); printArea.appendChild(cl); });
+  setTimeout(() => window.print(), 800);
+}
+
+// ── Init ──
+loadSectionData(1);
+</script>
+</body>
+</html>

@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pariya Academy | Admin Dashboard</title>
+<style>
+/* ─── ROOT IDENTITY (preserved from original) ─── */
+:root {
+  --primary:   #065f46;
+  --primary-l: #047857;
+  --accent:    #10b981;
+  --accent-l:  #34d399;
+  --bg:        #f8fafc;
+  --card:      #ffffff;
+  --text:      #1e293b;
+  --muted:     #64748b;
+  --danger:    #ef4444;
+  --danger-l:  #fca5a5;
+  --warn:      #f59e0b;
+  --warn-l:    #fde68a;
+  --info:      #3b82f6;
+  --border:    #e2e8f0;
+  --sidebar-w: 240px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+/* ─── SIDEBAR ─── */
+#sidebar {
+  width: var(--sidebar-w); background: var(--primary); color: #fff;
+  display: flex; flex-direction: column; flex-shrink: 0;
+  position: fixed; top: 0; left: 0; height: 100vh; z-index: 200;
+  transition: transform .3s;
+}
+.sidebar-brand {
+  padding: 20px 16px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.12);
+  display: flex; align-items: center; gap: 12px;
+}
+.sidebar-brand .logo-ring {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(255,255,255,.12); border: 2px solid rgba(255,255,255,.3);
+  display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+  overflow: hidden;
+}
+.sidebar-brand .logo-ring img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.sidebar-brand-text h2 { font-size: 13px; font-weight: 900; letter-spacing: .3px; line-height: 1.2; }
+.sidebar-brand-text p  { font-size: 10px; opacity: .65; margin-top: 2px; font-style: italic; }
+
+.nav-section { padding: 10px 0 4px 14px; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; opacity: .5; text-transform: uppercase; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+  border-left: 3px solid transparent; transition: all .2s; color: rgba(255,255,255,.8);
+}
+.nav-item:hover { background: rgba(255,255,255,.08); color: #fff; border-left-color: var(--accent); }
+.nav-item.active { background: rgba(16,185,129,.18); color: #fff; border-left-color: var(--accent); font-weight: 800; }
+.nav-item .ni { font-size: 16px; }
+
+.sidebar-footer { margin-top: auto; padding: 14px 18px; border-top: 1px solid rgba(255,255,255,.1); font-size: 11px; opacity: .5; }
+
+/* ─── MAIN WRAP ─── */
+#main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ─── TOP BAR ─── */
+#topbar {
+  background: var(--card); border-bottom: 2px solid var(--border);
+  padding: 0 24px; height: 62px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.topbar-left { display: flex; align-items: center; gap: 14px; }
+.topbar-left h1 { font-size: 16px; font-weight: 800; color: var(--primary); }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+#sync-indicator { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted); }
+#sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.hamburger { display: none; flex-direction: column; gap: 4px; cursor: pointer; padding: 4px; }
+.hamburger span { width: 22px; height: 2px; background: var(--primary); border-radius: 2px; }
+
+/* ─── PAGE CONTENT ─── */
+#content { padding: 22px 24px; flex: 1; }
+
+/* ─── PAGE VIEWS ─── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ─── STAT CARDS ─── */
+.stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px,1fr)); gap: 14px; margin-bottom: 22px; }
+.stat-box {
+  background: var(--card); padding: 18px 16px; border-radius: 12px;
+  border-top: 4px solid var(--accent);
+  box-shadow: 0 2px 8px rgba(0,0,0,.05); position: relative; overflow: hidden;
+}
+.stat-box.danger { border-top-color: var(--danger); }
+.stat-box.warn   { border-top-color: var(--warn); }
+.stat-box.info   { border-top-color: var(--info); }
+.stat-box.primary{ border-top-color: var(--primary); }
+.stat-label { font-size: 10.5px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: .5px; }
+.stat-value { font-size: 26px; font-weight: 900; color: var(--text); margin-top: 6px; line-height: 1; }
+.stat-sub   { font-size: 11px; color: var(--muted); margin-top: 4px; font-weight: 600; }
+.stat-icon  { position: absolute; right: 14px; top: 14px; font-size: 28px; opacity: .13; }
+
+/* ─── SECTION TABS ─── */
+.section-tabs { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+.sec-tab {
+  padding: 7px 16px; border-radius: 20px; border: 2px solid var(--border);
+  background: var(--card); font-size: 12.5px; font-weight: 700; cursor: pointer; color: var(--muted);
+  transition: all .2s; white-space: nowrap;
+}
+.sec-tab:hover { border-color: var(--accent); color: var(--primary); }
+.sec-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* ─── STATUS BAR ─── */
+.status-bar {
+  background: var(--card); padding: 12px 18px; border-radius: 10px; margin-bottom: 18px;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,.05);
+}
+
+/* ─── BTNs ─── */
+.btn { padding: 9px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: 700; font-size: 13px; transition: all .2s; display: inline-flex; align-items: center; gap: 6px; }
+.btn:active { transform: scale(.97); }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-l); }
+.btn-accent  { background: var(--accent); color: #fff; }
+.btn-accent:hover { background: var(--accent-l); color: var(--primary); }
+.btn-warn    { background: var(--warn); color: #000; }
+.btn-back    { background: #64748b; color: #fff; }
+.btn-back:hover { background: #475569; }
+.btn-sm { padding: 5px 11px; font-size: 11.5px; }
+
+/* ─── LOADER ─── */
+#loader-global { display: none; text-align: center; padding: 28px; font-weight: 700; color: var(--primary); }
+.loader-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin: 8px auto; max-width: 300px; }
+.loader-fill { height: 100%; background: var(--accent); border-radius: 2px; animation: lbar 1.4s ease-in-out infinite; }
+@keyframes lbar { 0%{width:0;margin-left:0} 50%{width:60%;margin-left:20%} 100%{width:0;margin-left:100%} }
+
+/* ─── CLASS GRID ─── */
+.class-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 16px; }
+.class-card {
+  background: var(--card); padding: 20px; border-radius: 14px;
+  border-left: 6px solid var(--primary); cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0,0,0,.06); transition: all .25s;
+  position: relative; overflow: hidden;
+}
+.class-card:hover { transform: translateY(-4px); box-shadow: 0 8px 18px rgba(0,0,0,.11); }
+.class-card h3 { font-size: 15px; font-weight: 800; color: var(--primary); margin-bottom: 6px; }
+.class-card .pct-row { display: flex; align-items: center; gap: 8px; margin: 10px 0 6px; }
+.pct-bar { flex: 1; height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.pct-fill { height: 100%; border-radius: 4px; transition: width .4s; }
+.pct-text { font-size: 13px; font-weight: 800; }
+.class-card-footer { display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 700; color: var(--muted); }
+.class-card .section-chip {
+  position: absolute; top: 12px; right: 12px;
+  padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 800; text-transform: uppercase;
+}
+.chip-nursery  { background: #fee2e2; color: #991b1b; }
+.chip-primary  { background: #dcfce7; color: #166534; }
+.chip-jss      { background: #ede9fe; color: #5b21b6; }
+.chip-ss       { background: #dbeafe; color: #1e40af; }
+
+/* ─── DETAIL VIEW ─── */
+#detail-view { display: none; }
+.detail-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+  background: var(--card); padding: 16px 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.detail-header h2 { font-size: 18px; font-weight: 900; color: var(--primary); }
+.detail-header-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.subject-table-wrap { background: var(--card); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.06); overflow: hidden; }
+table.sub-table { width: 100%; border-collapse: collapse; min-width: 560px; }
+.sub-table th { background: var(--primary); color: #fff; padding: 11px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+.sub-table td { padding: 11px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.sub-table td:nth-child(1) { width: 40px; font-weight: 800; color: var(--muted); text-align: center; }
+.sub-table td:nth-child(2) { font-weight: 700; text-align: left; }
+.sub-table td:not(:nth-child(1)):not(:nth-child(2)) { text-align: center; }
+.sub-table tbody tr:hover td { background: #f8fafc; }
+
+/* ─── BADGES ─── */
+.badge { padding: 4px 10px; border-radius: 5px; font-size: 10px; font-weight: 800; display: inline-block; }
+.badge.done { background: #dcfce7; color: #166534; }
+.badge.wait { background: #fee2e2; color: #991b1b; }
+
+/* ─── SUMMARY MINI CARDS in Detail ─── */
+.detail-stats { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.d-stat { background: var(--card); border-radius: 10px; padding: 12px 16px; flex: 1; min-width: 110px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.05); border-top: 3px solid var(--accent); }
+.d-stat .dv { font-size: 22px; font-weight: 900; color: var(--text); }
+.d-stat .dl { font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+
+/* ─── STAFF PAGE ─── */
+.staff-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 16px; }
+.staff-card {
+  background: var(--card); border-radius: 14px; padding: 22px;
+  box-shadow: 0 3px 8px rgba(0,0,0,.06); border-top: 4px solid var(--primary);
+  transition: box-shadow .2s;
+}
+.staff-card:hover { box-shadow: 0 6px 18px rgba(0,0,0,.1); }
+.staff-top { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.staff-avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; flex-shrink: 0; font-weight: 900; }
+.staff-name { font-size: 15px; font-weight: 800; color: var(--text); }
+.staff-phone { font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+.chip-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.chip { padding: 3px 9px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+.chip-sub  { background: #dbeafe; color: #1e40af; }
+.chip-cls  { background: #dcfce7; color: #166534; }
+.salary-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.salary-month {
+  flex: 1; min-width: 60px; text-align: center; padding: 7px 4px; border-radius: 8px;
+  font-size: 11px; font-weight: 800; cursor: pointer; border: 2px solid transparent; transition: all .2s;
+}
+.salary-month.paid   { background: #dcfce7; color: #166534; border-color: #86efac; }
+.salary-month.unpaid { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.salary-month:hover  { opacity: .8; transform: scale(1.04); }
+.salary-label { font-size: 10px; color: var(--muted); font-weight: 700; margin-bottom: 6px; text-transform: uppercase; }
+
+/* ─── SECTION OVERVIEW PILLS ─── */
+.section-overview { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 12px; margin-bottom: 20px; }
+.sec-overview-card {
+  background: var(--card); border-radius: 12px; padding: 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.05); border-left: 5px solid var(--primary); cursor: pointer; transition: all .2s;
+}
+.sec-overview-card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,.1); }
+.sec-overview-card h4 { font-size: 13px; font-weight: 800; color: var(--primary); margin-bottom: 6px; }
+.sec-overview-card .big { font-size: 24px; font-weight: 900; }
+
+/* ─── MINI PROGRESS ─── */
+.mini-progress { display: flex; gap: 3px; margin-top: 8px; }
+.mp-seg { height: 5px; flex: 1; border-radius: 3px; background: var(--border); }
+.mp-seg.filled { background: var(--accent); }
+
+/* ─── SEARCH BAR ─── */
+.search-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.search-bar input, .search-bar select {
+  padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; font-family: inherit;
+}
+.search-bar input:focus, .search-bar select:focus { border-color: var(--accent); }
+.search-bar input { flex: 1; min-width: 180px; }
+
+/* ─── ALERT ─── */
+.alert { padding: 12px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; margin-bottom: 14px; }
+.alert-warn { background: #fff7ed; border: 1px solid var(--warn-l); color: #92400e; }
+.alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+
+/* ─── PENDING ALERTS SECTION ─── */
+.pending-list { display: flex; flex-direction: column; gap: 8px; }
+.pending-item { background: var(--card); border-radius: 10px; padding: 14px 16px; border-left: 5px solid var(--danger); box-shadow: 0 2px 6px rgba(0,0,0,.05); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+.pending-item h4 { font-size: 14px; font-weight: 800; color: var(--text); }
+.pending-item p  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.pending-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.ptag { padding: 2px 8px; border-radius: 6px; background: #fee2e2; color: #991b1b; font-size: 11px; font-weight: 700; }
+
+/* ─── SECTION header ─── */
+.page-section-title { font-size: 17px; font-weight: 900; color: var(--primary); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+/* ─── Footer ─── */
+#main-footer { text-align: center; padding: 28px; color: var(--muted); font-size: 12px; font-weight: 600; border-top: 1px solid var(--border); background: var(--card); margin-top: 10px; }
+
+/* ─── STAFF CSV INPUT ─── */
+.csv-input-row { background: var(--card); border-radius: 12px; padding: 18px; margin-bottom: 18px; box-shadow: 0 2px 6px rgba(0,0,0,.05); }
+.csv-input-row label { display: block; font-size: 12px; font-weight: 800; color: var(--primary); margin-bottom: 6px; }
+.csv-url-group { display: flex; gap: 8px; }
+.csv-url-group input { flex: 1; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; }
+.csv-url-group input:focus { border-color: var(--accent); }
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  #sidebar { transform: translateX(-100%); }
+  #sidebar.open { transform: translateX(0); }
+  #main { margin-left: 0; }
+  .hamburger { display: flex; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 500px) {
+  .stats-row { grid-template-columns: 1fr; }
+  #content { padding: 14px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── SIDEBAR ─── -->
+<nav id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo-ring" id="sidebarLogoWrap">
+      <img id="sidebarLogo" src="" alt="🏫" onerror="this.style.display='none';this.parentElement.textContent='🏫'">
+    </div>
+    <div class="sidebar-brand-text">
+      <h2>Pariya Academy</h2>
+      <p>Do Not Be Sad</p>
+    </div>
+  </div>
+
+  <div class="nav-section">Overview</div>
+  <div class="nav-item active" onclick="showPage('pg-overview')"><span class="ni">📊</span> Dashboard</div>
+
+  <div class="nav-section">Monitoring</div>
+  <div class="nav-item" onclick="showPage('pg-nursery')"><span class="ni">🌸</span> Nursery Section</div>
+  <div class="nav-item" onclick="showPage('pg-primary')"><span class="ni">📗</span> Primary Section</div>
+  <div class="nav-item" onclick="showPage('pg-jss')"><span class="ni">🔬</span> JSS Section</div>
+  <div class="nav-item" onclick="showPage('pg-ss')"><span class="ni">🎓</span> SS Section</div>
+
+  <div class="nav-section">Management</div>
+  <div class="nav-item" onclick="showPage('pg-pending')"><span class="ni">⚠️</span> Pending Alerts</div>
+  <div class="nav-item" onclick="showPage('pg-staff')"><span class="ni">👥</span> Staff Management</div>
+  <div class="nav-item" onclick="showPage('pg-settings')"><span class="ni">⚙️</span> Settings</div>
+
+  <div class="sidebar-footer">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <a href="admin-dashboard.html" style="color:rgba(255,255,255,0.7);font-size:11px;font-weight:700;text-decoration:none;padding:6px 0;display:flex;align-items:center;gap:6px">⚙️ Report Card Portal</a>
+      <a href="../index.html" style="color:rgba(255,255,255,0.7);font-size:11px;font-weight:700;text-decoration:none;padding:6px 0;display:flex;align-items:center;gap:6px">🏫 School Website</a>
+    </div>
+    <div style="margin-top:8px;opacity:0.4;font-size:10px">Admin Monitor · 2025/2026</div>
+  </div>
+</nav>
+
+<!-- ─── MAIN ─── -->
+<div id="main">
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <div class="topbar-left">
+      <div class="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></div>
+      <h1 id="page-title">Dashboard Overview</h1>
+    </div>
+    <div class="topbar-right">
+      <div id="sync-indicator"><div id="sync-dot"></div><span id="sync-text">Ready</span></div>
+      <button class="btn btn-primary btn-sm" onclick="syncAll()">↻ Sync All</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+
+    <!-- ──────────────────── OVERVIEW PAGE ──────────────────── -->
+    <div class="page active" id="pg-overview">
+
+      <!-- Global Stats -->
+      <div class="stats-row" id="global-stats">
+        <div class="stat-box"><span class="stat-icon">🏫</span><div class="stat-label">Total Classes</div><div class="stat-value" id="g-total-classes">—</div><div class="stat-sub">Across all sections</div></div>
+        <div class="stat-box primary"><span class="stat-icon">✅</span><div class="stat-label">Avg Completion</div><div class="stat-value" id="g-avg-pct">—</div><div class="stat-sub">School-wide upload status</div></div>
+        <div class="stat-box danger"><span class="stat-icon">⏳</span><div class="stat-label">Pending Uploads</div><div class="stat-value" id="g-pending">—</div><div class="stat-sub">Score fields awaiting</div></div>
+        <div class="stat-box warn"><span class="stat-icon">🏆</span><div class="stat-label">Leading Class</div><div class="stat-value" id="g-lead">—</div><div class="stat-sub"></div></div>
+        <div class="stat-box info"><span class="stat-icon">🐢</span><div class="stat-label">Needs Attention</div><div class="stat-value" id="g-slow">—</div><div class="stat-sub"></div></div>
+      </div>
+
+      <!-- Section Overview Cards -->
+      <div class="page-section-title">📌 Section Overview</div>
+      <div class="section-overview" id="section-overview-cards"></div>
+
+      <div id="loader-global"><div>📡 Synchronizing all class sheets...</div><div class="loader-bar"><div class="loader-fill"></div></div></div>
+
+      <!-- All-Class Grid -->
+      <div class="page-section-title" style="margin-top:8px">📋 All Classes</div>
+      <div class="status-bar">
+        <span id="sync-text-main" style="font-weight:700;color:var(--muted);font-size:13px">Ready — click Sync to load data</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="syncAll()">↻ Sync All Classes</button>
+          <button class="btn btn-warn" onclick="copyFullReport()">📋 Copy Full Report</button>
+        </div>
+      </div>
+
+      <div id="home-view" class="class-grid"></div>
+    </div><!-- /overview -->
+
+    <!-- ──────────────────── DETAIL VIEW (shared) ──────────────────── -->
+    <div class="page" id="pg-detail">
+      <div class="detail-header">
+        <button class="btn btn-back" onclick="backFromDetail()">← Back</button>
+        <h2 id="class-title">Class Detail</h2>
+        <div class="detail-header-btns">
+          <button class="btn btn-warn" id="copy-btn-dynamic">📋 Copy Pending Report</button>
+          <button class="btn btn-accent" onclick="syncSingle()">↻ Re-Sync Class</button>
+        </div>
+      </div>
+
+      <div class="detail-stats" id="detail-stat-row"></div>
+
+      <div class="subject-table-wrap">
+        <div style="overflow-x:auto">
+          <table class="sub-table">
+            <thead><tr>
+              <th>S/N</th><th style="text-align:left">Subject</th>
+              <th>1st CA</th><th>2nd CA</th><th>3rd CA</th><th>Exam</th><th>Status</th>
+            </tr></thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──────────────────── SECTION PAGES ──────────────────── -->
+    <div class="page" id="pg-nursery">
+      <div class="page-section-title">🌸 Nursery Section — Score Monitor</div>
+      <div class="stats-row" id="nursery-stats"></div>
+      <div class="status-bar">
+        <span style="font-weight:700;font-size:13px;color:var(--muted)">Nursery Classes</span>
+        <button class="btn btn-primary" onclick="syncSection('nursery')">↻ Sync Nursery</button>
+      </div>
+      <div class="class-grid" id="nursery-grid"></div>
+    </div>
+
+    <div class="page" id="pg-primary">
+      <div class="page-section-title">📗 Primary Section — Score Monitor</div>
+      <div class="stats-row" id="primary-stats"></div>
+      <div class="status-bar">
+        <span style="font-weight:700;font-size:13px;color:var(--muted)">Primary Classes</span>
+        <button class="btn btn-primary" onclick="syncSection('primary')">↻ Sync Primary</button>
+      </div>
+      <div class="class-grid" id="primary-grid"></div>
+    </div>
+
+    <div class="page" id="pg-jss">
+      <div class="page-section-title">🔬 Junior Secondary — Score Monitor</div>
+      <div class="stats-row" id="jss-stats"></div>
+      <div class="status-bar">
+        <span style="font-weight:700;font-size:13px;color:var(--muted)">JSS Classes</span>
+        <button class="btn btn-primary" onclick="syncSection('jss')">↻ Sync JSS</button>
+      </div>
+      <div class="class-grid" id="jss-grid"></div>
+    </div>
+
+    <div class="page" id="pg-ss">
+      <div class="page-section-title">🎓 Senior Secondary — Score Monitor</div>
+      <div class="stats-row" id="ss-stats"></div>
+      <div class="status-bar">
+        <span style="font-weight:700;font-size:13px;color:var(--muted)">SS Classes</span>
+        <button class="btn btn-primary" onclick="syncSection('ss')">↻ Sync SS</button>
+      </div>
+      <div class="class-grid" id="ss-grid"></div>
+    </div>
+
+    <!-- ──────────────────── PENDING ALERTS ──────────────────── -->
+    <div class="page" id="pg-pending">
+      <div class="page-section-title">⚠️ Pending Upload Alerts</div>
+      <div class="alert alert-warn">Classes with one or more missing score fields. Sync first to get latest status.</div>
+      <div class="status-bar">
+        <span id="pending-count-text" style="font-weight:700;color:var(--muted);font-size:13px">—</span>
+        <button class="btn btn-warn" onclick="copyAllPending()">📋 Copy All Pending to Clipboard</button>
+      </div>
+      <div class="pending-list" id="pending-list"></div>
+    </div>
+
+    <!-- ──────────────────── STAFF MANAGEMENT ──────────────────── -->
+    <div class="page" id="pg-staff">
+      <div class="page-section-title">👥 Staff Management</div>
+
+      <div class="csv-input-row">
+        <label>📋 Staff Google Sheets CSV Link</label>
+        <div class="csv-url-group">
+          <input type="text" id="staff-csv-url" placeholder="Paste your published Google Sheets CSV link here..." value="">
+          <button class="btn btn-primary" onclick="loadStaffData()">↻ Load Staff</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">
+          Sheet columns: <strong>Timestamp, Name, Phone Number, Subjects, Classes</strong> — multiple subjects/classes separated by commas.
+        </div>
+      </div>
+
+      <div class="stats-row" id="staff-stats">
+        <div class="stat-box"><div class="stat-label">Total Staff</div><div class="stat-value" id="st-total">—</div></div>
+        <div class="stat-box primary"><div class="stat-label">Fully Paid</div><div class="stat-value" id="st-paid">—</div></div>
+        <div class="stat-box danger"><div class="stat-label">Unpaid Staff</div><div class="stat-value" id="st-unpaid">—</div></div>
+        <div class="stat-box warn"><div class="stat-label">Avg Subjects/Staff</div><div class="stat-value" id="st-avg-sub">—</div></div>
+      </div>
+
+      <div class="search-bar">
+        <input type="text" id="staff-search" placeholder="🔍 Search staff by name..." oninput="filterStaff()">
+        <select id="staff-filter-section" onchange="filterStaff()">
+          <option value="">All Sections</option>
+          <option value="nursery">Nursery</option>
+          <option value="primary">Primary</option>
+          <option value="jss">JSS</option>
+          <option value="ss">SS</option>
+        </select>
+      </div>
+
+      <div id="staff-loader" style="display:none;text-align:center;padding:20px;font-weight:700;color:var(--primary)">📡 Loading staff data...</div>
+      <div id="staff-empty" class="alert alert-info">Paste a Google Sheets CSV link above and click Load Staff to display staff records.</div>
+      <div class="staff-grid" id="staff-grid"></div>
+    </div>
+
+    <!-- ──────────────────── SETTINGS ──────────────────── -->
+    <div class="page" id="pg-settings">
+      <div class="page-section-title">⚙️ CSV Link Settings</div>
+      <div class="alert alert-info">Edit the Google Sheets CSV links for each class. Changes are saved in your browser.</div>
+      <div id="settings-form"></div>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+        <button class="btn btn-back" onclick="resetSettings()">↺ Reset to Defaults</button>
+      </div>
+      <div id="settings-msg" style="margin-top:10px"></div>
+    </div>
+
+  </div><!-- /content -->
+
+  <footer id="main-footer">Copyright ©️ Arabo Modibbo, 2026 &nbsp;·&nbsp; Pariya Academy Management Dashboard</footer>
+</div><!-- /main -->
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   CONFIGURATION — All classes & their CSV links
+   ═══════════════════════════════════════════════════════ */
+const DEFAULT_CONFIG = {
+  /* ── NURSERY ── */
+  "Nursery 1": { section:"nursery", url:"" },
+  "Nursery 2": { section:"nursery", url:"" },
+
+  /* ── PRIMARY ── */
+  "Primary 1": { section:"primary", url:"" },
+  "Primary 2": { section:"primary", url:"" },
+  "Primary 3": { section:"primary", url:"" },
+  "Primary 4": { section:"primary", url:"" },
+  "Primary 5": { section:"primary", url:"" },
+
+  /* ── JSS (original links preserved exactly) ── */
+  "JSS 1": { section:"jss", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vRAI5mD_lEIpq81Kk89kghO1SQciunctORaOEdEpkgmURxmEawlVRTl1HT-0-pkKA/pub?gid=621314920&single=true&output=csv" },
+  "JSS 2": { section:"jss", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vR7KCoen0Wu3Pc5gxNVGF1abBYAL78QHbaBGd8Cp5Efh4YhkJ5h17E0yLtL1wn_SQ/pub?gid=38773167&single=true&output=csv" },
+  "JSS 3": { section:"jss", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vSaVVQc45bP_F9Fv1MTpfhBmhQabJNcPDQJdkaQ9lWap49LJiMKQiyTH8qQkxyHJQ/pub?gid=525850641&single=true&output=csv" },
+
+  /* ── SS (original links preserved exactly) ── */
+  "SS 1": { section:"ss", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vSuY_EWcMq382XJYjaHBEHnWYY00oVrC9kkIVMOozvT9HJRJklAINFB7YKGmH2m5w/pub?gid=621314920&single=true&output=csv" },
+  "SS 2": { section:"ss", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vS-1vGM1J8MCpNuU9m9AqD34MD3mgsGizW6BoWVXJkVvXbMYNDQuhzPhZKIp6LF_Q/pub?gid=621314920&single=true&output=csv" },
+  "SS 3": { section:"ss", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6u8PKfOtL8iCmpUbwUleRp6zruqMqud1GhTxZtKr3uDTse2TJl0xoHklC-mlhkg/pub?gid=621314920&single=true&output=csv" }
+};
+
+const SECTION_META = {
+  nursery: { label:"Nursery",  icon:"🌸", chip:"chip-nursery",  color:"#ef4444" },
+  primary: { label:"Primary",  icon:"📗", chip:"chip-primary",  color:"#10b981" },
+  jss:     { label:"JSS",      icon:"🔬", chip:"chip-jss",      color:"#8b5cf6" },
+  ss:      { label:"SS",       icon:"🎓", chip:"chip-ss",       color:"#3b82f6" }
+};
+
+/* ── Local Storage persistence ── */
+function getSavedConfig() {
+  try { const s = localStorage.getItem('pa_admin_cfg'); return s ? JSON.parse(s) : null; } catch(e) { return null; }
+}
+function saveConfig(cfg) {
+  try { localStorage.setItem('pa_admin_cfg', JSON.stringify(cfg)); } catch(e) {}
+}
+let CONFIG = Object.assign({}, DEFAULT_CONFIG, getSavedConfig() || {});
+
+/* ── Salary store ── */
+function getSalaryStore() {
+  try { return JSON.parse(localStorage.getItem('pa_salary') || '{}'); } catch(e) { return {}; }
+}
+function saveSalaryStore(s) {
+  try { localStorage.setItem('pa_salary', JSON.stringify(s)); } catch(e) {}
+}
+
+let MASTER_DATA = {};
+let ALL_STAFF = [];
+let _detailClass = null;
+let _detailFromPage = 'pg-overview';
+let _staffData = [];
+
+/* ═══════════════════════════════════════════════════════
+   NAVIGATION
+   ═══════════════════════════════════════════════════════ */
+const PAGE_TITLES = {
+  'pg-overview':'Dashboard Overview','pg-detail':'Class Detail',
+  'pg-nursery':'Nursery Section','pg-primary':'Primary Section',
+  'pg-jss':'JSS Section','pg-ss':'SS Section',
+  'pg-pending':'Pending Alerts','pg-staff':'Staff Management','pg-settings':'Settings'
+};
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const target = document.querySelector(`.nav-item[onclick*="${id}"]`);
+  if (target) target.classList.add('active');
+  document.getElementById('page-title').textContent = PAGE_TITLES[id] || '';
+  if (id === 'pg-pending') renderPendingAlerts();
+  if (id === 'pg-settings') renderSettingsForm();
+  closeSidebar();
+}
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); }
+
+/* ═══════════════════════════════════════════════════════
+   CSV PARSING (exact logic from original, extended)
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Score column helpers (fixed for actual Google Sheet structure) ── */
+function isScoreCol(h) {
+  return /\s?_CA[123]$/.test(h) || /\s?_Exams$/.test(h);
+}
+function extractSubjectName(h) {
+  return h.replace(/\s?_CA[123]$/, '').replace(/\s?_Exams$/, '').trim();
+}
+function getScoreType(h) {
+  if (/_CA1$/.test(h)) return 'CA1';
+  if (/_CA2$/.test(h)) return 'CA2';
+  if (/_CA3$/.test(h)) return 'CA3';
+  if (/_Exams$/.test(h)) return 'Exams';
+  return '';
+}
+function splitCsvLine(line) {
+  const result = []; let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') { inQ = !inQ; }
+    else if (ch === ',' && !inQ) { result.push(cur); cur = ''; }
+    else cur += ch;
+  }
+  result.push(cur);
+  return result;
+}
+
+async function fetchAndParse(name, url) {
+  if (!url) return { total:0, done:0, subjects:{}, students:[], error:'No CSV link set' };
+  try {
+    const sep = url.includes('?') ? '&' : '?';
+    const resp = await fetch(url + sep + 't=' + Date.now());
+    const csv  = await resp.text();
+    const rawLines = csv.split(/\r?\n/).filter(l => l.trim());
+    const headers  = splitCsvLine(rawLines[0]).map(h => h.trim().replace(/^"|"$/g,''));
+    const dataRows = rawLines.slice(1).map(l => splitCsvLine(l));
+
+    const subjects = {};
+    let total = 0, done = 0;
+
+    headers.forEach((header, idx) => {
+      if (!isScoreCol(header)) return;
+      const sName     = extractSubjectName(header);
+      const scoreType = getScoreType(header);
+      if (!scoreType) return;
+      if (!subjects[sName]) subjects[sName] = { CA1:null, CA2:null, CA3:null, Exams:null };
+      let filled = false;
+      for (let r = 0; r < dataRows.length; r++) {
+        const val = (dataRows[r][idx] || '').trim().replace(/^"|"$/g,'');
+        if (val && val !== '0' && val !== '-') { filled = true; break; }
+      }
+      subjects[sName][scoreType] = filled;
+      total++; if (filled) done++;
+    });
+
+    // Build student list for search
+    const nameIdx = headers.findIndex(h => h.toLowerCase() === 'name');
+    const admIdx  = headers.findIndex(h => h.toLowerCase() === 'admission no');
+    const students = dataRows.map((row, ri) => {
+      const nameVal = nameIdx >= 0 ? (row[nameIdx]||'').replace(/^"|"$/g,'').trim() : '';
+      if (!nameVal) return null;
+      let totalScore = 0, subCount = 0;
+      headers.forEach((h, i) => {
+        if (!isScoreCol(h)) return;
+        const v = parseFloat((row[i]||'').trim()) || 0;
+        if (v > 0) { totalScore += v; subCount++; }
+      });
+      return {
+        _name: nameVal,
+        _adm:  admIdx >= 0 ? (row[admIdx]||'').replace(/^"|"$/g,'').trim() : '—',
+        _class: name,
+        _total: totalScore.toFixed(0),
+        _avg:   subCount > 0 ? (totalScore / subCount).toFixed(1) : '0.0',
+        _pos:   null
+      };
+    }).filter(Boolean);
+
+    students.sort((a,b) => parseFloat(b._avg) - parseFloat(a._avg));
+    let lastAvg = null, lastPos = 0;
+    students.forEach((s,i) => {
+      if (s._avg !== lastAvg) { lastPos = i+1; lastAvg = s._avg; }
+      s._pos = lastPos;
+    });
+
+    return { total, done, subjects, students };
+  } catch(err) {
+    return { total:0, done:0, subjects:{}, students:[], error: err.message };
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   SYNC
+   ═══════════════════════════════════════════════════════ */
+async function syncAll() {
+  const loader = document.getElementById('loader-global');
+  const homeView = document.getElementById('home-view');
+  loader.style.display = 'block';
+  homeView.style.opacity = '0.3';
+  setSyncText('Syncing…');
+
+  for (const [name, meta] of Object.entries(CONFIG)) {
+    MASTER_DATA[name] = await fetchAndParse(name, meta.url);
+    MASTER_DATA[name].section = meta.section;
+  }
+
+  loader.style.display = 'none';
+  homeView.style.opacity = '1';
+  setSyncText('Last Sync: ' + new Date().toLocaleTimeString());
+  renderAll();
+}
+
+async function syncSection(sec) {
+  setSyncText('Syncing ' + sec + '…');
+  for (const [name, meta] of Object.entries(CONFIG)) {
+    if (meta.section === sec) {
+      MASTER_DATA[name] = await fetchAndParse(name, meta.url);
+      MASTER_DATA[name].section = meta.section;
+    }
+  }
+  setSyncText('Last Sync: ' + new Date().toLocaleTimeString());
+  renderSectionGrid(sec);
+  renderSectionStats(sec);
+  renderGlobalStats();
+}
+
+async function syncSingle() {
+  if (!_detailClass) return;
+  setSyncText('Syncing ' + _detailClass + '…');
+  const meta = CONFIG[_detailClass];
+  if (meta) {
+    MASTER_DATA[_detailClass] = await fetchAndParse(_detailClass, meta.url);
+    MASTER_DATA[_detailClass].section = meta.section;
+  }
+  setSyncText('Last Sync: ' + new Date().toLocaleTimeString());
+  renderDetailView(_detailClass);
+}
+
+function setSyncText(t) {
+  document.getElementById('sync-text').textContent = t;
+  document.getElementById('sync-text-main').textContent = t;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RENDER — GLOBAL
+   ═══════════════════════════════════════════════════════ */
+function renderAll() {
+  renderGlobalStats();
+  renderSectionOverview();
+  renderHomeGrid();
+  ['nursery','primary','jss','ss'].forEach(s => { renderSectionGrid(s); renderSectionStats(s); });
+}
+
+function renderGlobalStats() {
+  const entries = Object.entries(MASTER_DATA);
+  if (!entries.length) return;
+  let totalPct = 0, totalPending = 0;
+  let lead = { name:'—', pct:-1 }, slow = { name:'—', pct:101 };
+  entries.forEach(([name, d]) => {
+    const pct = d.total > 0 ? Math.round((d.done / d.total) * 100) : 0;
+    totalPct += pct;
+    totalPending += (d.total - d.done);
+    if (pct > lead.pct) lead = { name, pct };
+    if (pct < slow.pct) slow = { name, pct };
+  });
+  setText('g-total-classes', entries.length);
+  setText('g-avg-pct', Math.round(totalPct / entries.length) + '%');
+  setText('g-pending', totalPending);
+  setText('g-lead', lead.name + ' (' + lead.pct + '%)');
+  setText('g-slow', slow.name + ' (' + slow.pct + '%)');
+}
+
+function renderSectionOverview() {
+  const el = document.getElementById('section-overview-cards');
+  el.innerHTML = '';
+  ['nursery','primary','jss','ss'].forEach(sec => {
+    const m = SECTION_META[sec];
+    const classes = Object.entries(MASTER_DATA).filter(([,d]) => d.section === sec);
+    if (!classes.length) { el.innerHTML += `<div class="sec-overview-card" onclick="showPage('pg-${sec}')"><h4>${m.icon} ${m.label}</h4><div class="big" style="color:var(--muted)">—</div><div style="font-size:11px;color:var(--muted)">No data yet</div></div>`; return; }
+    const avg = Math.round(classes.reduce((s,[,d]) => s + (d.total>0?Math.round(d.done/d.total*100):0), 0) / classes.length);
+    const segs = classes.map(([name,d]) => { const p = d.total>0?Math.round(d.done/d.total*100):0; return `<div class="mp-seg ${p===100?'filled':''}" title="${name}: ${p}%"></div>`; }).join('');
+    el.innerHTML += `
+      <div class="sec-overview-card" onclick="showPage('pg-${sec}')">
+        <h4>${m.icon} ${m.label}</h4>
+        <div class="big" style="color:${avg>=70?'var(--accent)':avg>=40?'var(--warn)':'var(--danger)'}">${avg}%</div>
+        <div style="font-size:11px;color:var(--muted)">${classes.length} class${classes.length!==1?'es':''}</div>
+        <div class="mini-progress">${segs}</div>
+      </div>`;
+  });
+}
+
+function renderHomeGrid() {
+  const view = document.getElementById('home-view');
+  view.innerHTML = '';
+  for (const [name, data] of Object.entries(MASTER_DATA)) {
+    view.innerHTML += classCardHtml(name, data, 'pg-overview');
+  }
+}
+
+function renderSectionGrid(sec) {
+  const el = document.getElementById(sec + '-grid');
+  if (!el) return;
+  el.innerHTML = '';
+  for (const [name, data] of Object.entries(MASTER_DATA)) {
+    if (data.section !== sec) continue;
+    el.innerHTML += classCardHtml(name, data, 'pg-' + sec);
+  }
+}
+
+function renderSectionStats(sec) {
+  const el = document.getElementById(sec + '-stats');
+  if (!el) return;
+  const classes = Object.entries(MASTER_DATA).filter(([,d]) => d.section === sec);
+  if (!classes.length) { el.innerHTML = '<div class="stat-box"><div class="stat-label">No Data</div><div class="stat-value">—</div></div>'; return; }
+  let totDone = 0, totAll = 0;
+  let lead = { name:'—', pct:-1 }, slow = { name:'—', pct:101 };
+  classes.forEach(([name, d]) => {
+    totDone += d.done; totAll += d.total;
+    const pct = d.total>0?Math.round(d.done/d.total*100):0;
+    if (pct > lead.pct) lead = { name, pct };
+    if (pct < slow.pct) slow = { name, pct };
+  });
+  const avg = totAll > 0 ? Math.round(totDone / totAll * 100) : 0;
+  el.innerHTML = `
+    <div class="stat-box"><div class="stat-label">Classes</div><div class="stat-value">${classes.length}</div></div>
+    <div class="stat-box primary"><div class="stat-label">Section Completion</div><div class="stat-value">${avg}%</div></div>
+    <div class="stat-box"><div class="stat-label">Leading Class</div><div class="stat-value" style="font-size:16px">${lead.name}</div><div class="stat-sub">${lead.pct}% done</div></div>
+    <div class="stat-box danger"><div class="stat-label">Needs Attention</div><div class="stat-value" style="font-size:16px">${slow.name}</div><div class="stat-sub">${slow.pct}% done</div></div>`;
+}
+
+function classCardHtml(name, data, fromPage) {
+  const pct = data.total > 0 ? Math.round((data.done / data.total) * 100) : 0;
+  const sec = data.section || 'primary';
+  const m = SECTION_META[sec] || SECTION_META.primary;
+  const fillColor = pct >= 80 ? 'var(--accent)' : pct >= 50 ? 'var(--warn)' : 'var(--danger)';
+  const pending = data.total - data.done;
+  const hasError = data.error && data.total === 0;
+  return `
+  <div class="class-card" onclick="showDetails('${name}','${fromPage}')">
+    <span class="section-chip ${m.chip}">${m.label}</span>
+    <h3>${name}</h3>
+    <div class="pct-row">
+      <div class="pct-bar"><div class="pct-fill" style="width:${pct}%;background:${fillColor}"></div></div>
+      <span class="pct-text" style="color:${fillColor}">${pct}%</span>
+    </div>
+    <div class="class-card-footer">
+      <span style="color:var(--accent)">✅ ${data.done} done</span>
+      <span style="color:var(--danger)">⏳ ${pending} pending</span>
+    </div>
+    ${hasError ? `<div style="font-size:10px;color:var(--danger);margin-top:6px">⚠️ No link / error</div>` : ''}
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════
+   DETAIL VIEW
+   ═══════════════════════════════════════════════════════ */
+function showDetails(name, fromPage) {
+  _detailClass = name;
+  _detailFromPage = fromPage || 'pg-overview';
+  showPage('pg-detail');
+  renderDetailView(name);
+}
+
+function renderDetailView(name) {
+  const data = MASTER_DATA[name];
+  if (!data) return;
+  document.getElementById('class-title').textContent = name;
+  document.getElementById('copy-btn-dynamic').onclick = () => copySingleClassReport(name);
+
+  const pct = data.total > 0 ? Math.round(data.done / data.total * 100) : 0;
+  const pending = data.total - data.done;
+
+  document.getElementById('detail-stat-row').innerHTML = `
+    <div class="d-stat"><div class="dv">${data.total}</div><div class="dl">Total Fields</div></div>
+    <div class="d-stat" style="border-top-color:var(--accent)"><div class="dv" style="color:var(--accent)">${data.done}</div><div class="dl">Done</div></div>
+    <div class="d-stat" style="border-top-color:var(--danger)"><div class="dv" style="color:var(--danger)">${pending}</div><div class="dl">Pending</div></div>
+    <div class="d-stat" style="border-top-color:var(--primary)"><div class="dv" style="color:var(--primary)">${pct}%</div><div class="dl">Completion</div></div>`;
+
+  const body = document.getElementById('table-body');
+  body.innerHTML = '';
+  let i = 1;
+  for (const s in data.subjects) {
+    const sub = data.subjects[s];
+    const allDone = sub.CA1 && sub.CA2 && sub.Exam;
+    body.innerHTML += `
+      <tr>
+        <td>${i++}</td>
+        <td style="text-align:left;font-weight:700">${s}</td>
+        <td>${badge(sub.CA1)}</td>
+        <td>${badge(sub.CA2)}</td>
+        <td>${badge(sub.CA3)}</td>
+        <td>${badge(sub.Exams)}</td>
+        <td>${allDone ? '<span class="badge done">COMPLETE</span>' : '<span class="badge wait">INCOMPLETE</span>'}</td>
+      </tr>`;
+  }
+}
+
+function backFromDetail() { showPage(_detailFromPage); }
+
+/* ═══════════════════════════════════════════════════════
+   PENDING ALERTS
+   ═══════════════════════════════════════════════════════ */
+function renderPendingAlerts() {
+  const list = document.getElementById('pending-list');
+  list.innerHTML = '';
+  let count = 0;
+  for (const [name, data] of Object.entries(MASTER_DATA)) {
+    const pendingSubs = [];
+    for (const s in data.subjects) {
+      const m = [];
+      if (!data.subjects[s].CA1) m.push("1st CA");
+      if (!data.subjects[s].CA2) m.push("2nd CA");
+      if (!data.subjects[s].CA3) m.push("3rd CA");
+      if (!data.subjects[s].Exams) m.push("Exam Score");
+      if (m.length) pendingSubs.push({ sub: s, missing: m });
+    }
+    if (!pendingSubs.length) continue;
+    count++;
+    const pct = data.total > 0 ? Math.round(data.done / data.total * 100) : 0;
+    const sec = data.section || 'primary';
+    const m = SECTION_META[sec] || SECTION_META.primary;
+    const tags = pendingSubs.slice(0, 4).map(p => `<span class="ptag">${p.sub}: ${p.missing.join(', ')}</span>`).join('');
+    const more = pendingSubs.length > 4 ? `<span class="ptag">+${pendingSubs.length - 4} more</span>` : '';
+    list.innerHTML += `
+      <div class="pending-item">
+        <div>
+          <h4>${m.icon} ${name} <span style="font-size:11px;color:var(--muted)">— ${100 - pct}% pending</span></h4>
+          <div class="pending-tags" style="margin-top:6px">${tags}${more}</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="showDetails('${name}','pg-pending')">View Details</button>
+      </div>`;
+  }
+  document.getElementById('pending-count-text').textContent = count ? `${count} class${count!==1?'es':''} have pending uploads` : 'All classes are up to date ✅';
+  if (!count) list.innerHTML = '<div class="alert" style="background:#dcfce7;border:1px solid #86efac;color:#166534;padding:16px;border-radius:10px">🎉 All classes have complete score records. Excellent work!</div>';
+}
+
+/* ═══════════════════════════════════════════════════════
+   STAFF MANAGEMENT
+   ═══════════════════════════════════════════════════════ */
+async function loadStaffData() {
+  const url = document.getElementById('staff-csv-url').value.trim();
+  if (!url) { alert('Please paste a Google Sheets CSV link.'); return; }
+  document.getElementById('staff-loader').style.display = 'block';
+  document.getElementById('staff-empty').style.display = 'none';
+  document.getElementById('staff-grid').innerHTML = '';
+  try {
+    const resp = await fetch(url + '&t=' + Date.now());
+    const csv  = await resp.text();
+    _staffData = parseStaffCSV(csv);
+    renderStaffGrid(_staffData);
+    renderStaffStats(_staffData);
+  } catch(e) {
+    alert('Error loading staff data: ' + e.message);
+  }
+  document.getElementById('staff-loader').style.display = 'none';
+}
+
+function parseStaffCSV(csv) {
+  const lines = csv.trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g,''));
+  return lines.slice(1).map(line => {
+    const vals = splitCsvLine(line);
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (vals[i] || '').replace(/"/g,'').trim());
+    return {
+      name:     obj['name'] || obj['full name'] || 'Unknown',
+      phone:    obj['phone number'] || obj['phone'] || '—',
+      subjects: (obj['subjects'] || obj['subject'] || '').split(',').map(s=>s.trim()).filter(Boolean),
+      classes:  (obj['classes'] || obj['class'] || '').split(',').map(s=>s.trim()).filter(Boolean),
+      timestamp:obj['timestamp'] || ''
+    };
+  }).filter(s => s.name && s.name !== 'Unknown');
+}
+
+function splitCsvLine(line) {
+  const result = []; let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQ = !inQ; }
+    else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
+    else cur += c;
+  }
+  result.push(cur);
+  return result;
+}
+
+function detectSection(subjects, classes) {
+  const all = [...subjects, ...classes].join(' ').toLowerCase();
+  if (all.includes('nursery')) return 'nursery';
+  if (all.includes('ss') || all.includes('senior')) return 'ss';
+  if (all.includes('jss') || all.includes('junior')) return 'jss';
+  return 'primary';
+}
+
+function renderStaffStats(data) {
+  const salary = getSalaryStore();
+  const fullyPaid = data.filter(s => {
+    const k = staffKey(s);
+    return salary[k] && salary[k].m1 && salary[k].m2 && salary[k].m3;
+  }).length;
+  setText('st-total', data.length);
+  setText('st-paid', fullyPaid);
+  setText('st-unpaid', data.length - fullyPaid);
+  const avg = data.length ? (data.reduce((t,s) => t + s.subjects.length, 0) / data.length).toFixed(1) : '—';
+  setText('st-avg-sub', avg);
+}
+
+function staffKey(s) { return s.name.toLowerCase().replace(/\s+/g,'_'); }
+
+function renderStaffGrid(data) {
+  const grid = document.getElementById('staff-grid');
+  grid.innerHTML = '';
+  if (!data.length) { document.getElementById('staff-empty').style.display = 'block'; return; }
+  document.getElementById('staff-empty').style.display = 'none';
+  const salary = getSalaryStore();
+  data.forEach(staff => {
+    const k = staffKey(staff);
+    if (!salary[k]) salary[k] = { m1:false, m2:false, m3:false };
+    const initials = staff.name.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+    const subChips = staff.subjects.slice(0,5).map(s=>`<span class="chip chip-sub">${s}</span>`).join('') + (staff.subjects.length>5?`<span class="chip chip-sub">+${staff.subjects.length-5}</span>`:'');
+    const clsChips = staff.classes.slice(0,4).map(c=>`<span class="chip chip-cls">${c}</span>`).join('') + (staff.classes.length>4?`<span class="chip chip-cls">+${staff.classes.length-4}</span>`:'');
+    const mLabel = ['Jan','Feb','Mar'];
+    const monthBtns = [1,2,3].map(n => {
+      const paid = salary[k][`m${n}`];
+      return `<div class="salary-month ${paid?'paid':'unpaid'}" onclick="toggleSalary('${k}',${n},this)" title="Click to toggle">${mLabel[n-1]}<br>${paid?'Paid':'Unpaid'}</div>`;
+    }).join('');
+
+    grid.innerHTML += `
+      <div class="staff-card" id="sc-${k}">
+        <div class="staff-top">
+          <div class="staff-avatar">${initials}</div>
+          <div>
+            <div class="staff-name">${staff.name}</div>
+            <div class="staff-phone">📞 ${staff.phone}</div>
+          </div>
+        </div>
+        <div style="margin-bottom:8px">
+          <div class="salary-label">Subjects</div>
+          <div class="chip-wrap">${subChips || '<span style="color:var(--muted);font-size:12px">Not specified</span>'}</div>
+        </div>
+        <div style="margin-bottom:12px">
+          <div class="salary-label">Classes</div>
+          <div class="chip-wrap">${clsChips || '<span style="color:var(--muted);font-size:12px">Not specified</span>'}</div>
+        </div>
+        <div class="salary-label">💰 Salary Payment Status — Click to Toggle</div>
+        <div class="salary-row">${monthBtns}</div>
+      </div>`;
+  });
+  saveSalaryStore(salary);
+}
+
+function toggleSalary(key, month, el) {
+  const salary = getSalaryStore();
+  if (!salary[key]) salary[key] = { m1:false, m2:false, m3:false };
+  salary[key][`m${month}`] = !salary[key][`m${month}`];
+  saveSalaryStore(salary);
+  const paid = salary[key][`m${month}`];
+  el.className = `salary-month ${paid ? 'paid' : 'unpaid'}`;
+  const labels = ['Jan','Feb','Mar'];
+  el.innerHTML = `${labels[month-1]}<br>${paid?'Paid':'Unpaid'}`;
+  renderStaffStats(_staffData);
+}
+
+function filterStaff() {
+  const q = document.getElementById('staff-search').value.toLowerCase();
+  const sec = document.getElementById('staff-filter-section').value.toLowerCase();
+  const filtered = _staffData.filter(s => {
+    const matchQ = !q || s.name.toLowerCase().includes(q);
+    const matchS = !sec || detectSection(s.subjects, s.classes) === sec;
+    return matchQ && matchS;
+  });
+  renderStaffGrid(filtered);
+}
+
+/* ═══════════════════════════════════════════════════════
+   COPY REPORTS
+   ═══════════════════════════════════════════════════════ */
+function copySingleClassReport(className) {
+  const data = MASTER_DATA[className];
+  if (!data) return;
+  let msg = `*PARIYA ACADEMY — ${className.toUpperCase()} PENDING REPORT*\n`;
+  const pending = [];
+  for (const s in data.subjects) {
+    const m = [];
+    if (!data.subjects[s].CA1) m.push("1st CA");
+    if (!data.subjects[s].CA2) m.push("2nd CA");
+    if (!data.subjects[s].CA3) m.push("3rd CA");
+    if (!data.subjects[s].Exams) m.push("Exam Score");
+    if (m.length) pending.push(`${s}: (${m.join(', ')})`);
+  }
+  msg += pending.length ? "The following records are still missing:\n\n- " + pending.join('\n- ') : "Excellent! All records are 100% complete.";
+  navigator.clipboard.writeText(msg).then(() => alert(`${className} report copied!`)).catch(() => { prompt('Copy this:', msg); });
+}
+
+function copyAllPending() {
+  let msg = `*PARIYA ACADEMY — FULL PENDING REPORT*\n${new Date().toLocaleString()}\n\n`;
+  for (const [name, data] of Object.entries(MASTER_DATA)) {
+    const pending = [];
+    for (const s in data.subjects) {
+      const m = [];
+      if (!data.subjects[s].CA1) m.push("1st CA");
+      if (!data.subjects[s].CA2) m.push("2nd CA");
+      if (!data.subjects[s].CA3) m.push("3rd CA");
+      if (!data.subjects[s].Exams) m.push("Exam Score");
+      if (m.length) pending.push(`  • ${s}: ${m.join(', ')}`);
+    }
+    if (pending.length) msg += `*${name}:*\n${pending.join('\n')}\n\n`;
+  }
+  navigator.clipboard.writeText(msg).then(() => alert('Full pending report copied!')).catch(() => { prompt('Copy this:', msg); });
+}
+
+function copyFullReport() {
+  let msg = `*PARIYA ACADEMY — FULL CLASS STATUS*\n${new Date().toLocaleString()}\n\n`;
+  for (const [name, data] of Object.entries(MASTER_DATA)) {
+    const pct = data.total > 0 ? Math.round(data.done / data.total * 100) : 0;
+    msg += `${name}: ${pct}% complete (${data.done}/${data.total})\n`;
+  }
+  navigator.clipboard.writeText(msg).then(() => alert('Full report copied!')).catch(() => { prompt('Copy this:', msg); });
+}
+
+/* ═══════════════════════════════════════════════════════
+   SETTINGS
+   ═══════════════════════════════════════════════════════ */
+function renderSettingsForm() {
+  const form = document.getElementById('settings-form');
+  form.innerHTML = '';
+  for (const [name, meta] of Object.entries(CONFIG)) {
+    const m = SECTION_META[meta.section] || SECTION_META.primary;
+    form.innerHTML += `
+      <div class="csv-input-row" style="margin-bottom:10px">
+        <label>${m.icon} ${name} <span class="section-chip ${m.chip}" style="position:static;display:inline-block;margin-left:8px">${m.label}</span></label>
+        <div class="csv-url-group">
+          <input type="text" id="cfg-${name.replace(/\s/g,'_')}" value="${meta.url || ''}" placeholder="Paste CSV link for ${name}…">
+        </div>
+      </div>`;
+  }
+}
+
+function saveSettings() {
+  const saved = {};
+  for (const name of Object.keys(CONFIG)) {
+    const input = document.getElementById('cfg-' + name.replace(/\s/g,'_'));
+    if (input) {
+      CONFIG[name].url = input.value.trim();
+      saved[name] = { ...CONFIG[name] };
+    }
+  }
+  saveConfig(saved);
+  document.getElementById('settings-msg').innerHTML = '<div class="alert" style="background:#dcfce7;border:1px solid #86efac;color:#166534;padding:10px 14px;border-radius:8px">✅ Settings saved. Click Sync to reload data.</div>';
+  setTimeout(() => document.getElementById('settings-msg').innerHTML = '', 3000);
+}
+
+function resetSettings() {
+  if (!confirm('Reset all links to defaults?')) return;
+  localStorage.removeItem('pa_admin_cfg');
+  CONFIG = Object.assign({}, DEFAULT_CONFIG);
+  renderSettingsForm();
+}
+
+/* ─── Utility ─── */
+function badge(v) {
+  if (v === null) return '—';
+  return v ? '<span class="badge done">DONE</span>' : '<span class="badge wait">WAIT</span>';
+}
+function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+
+/* ─── Init ─── */
+window.onload = syncAll;
+</script>
+</body>
+</html>
